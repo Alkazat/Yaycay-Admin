@@ -1,0 +1,73 @@
+/*
+ * Yaycay design-system tokens (local stand-in).
+ *
+ * The shared design system ships its own styles.css (tokens + Fredoka/Nunito
+ * webfonts + base styles). This file mirrors the semantic tokens from the
+ * model context (section 10) so the Admin app can build and run before the
+ * shared package is wired in. When @yaycay design styles are available, link
+ * those and delete this file - do not let the two diverge.
+ */
+
+:root {
+  /* Brand palette (semantic) */
+  --brand-primary: #2a96d8; /* sky */
+  --brand-primary-deep: #0a4c8b; /* royal */
+  --brand-cta: #f7aa15; /* sun */
+  --brand-accent: #2bc3d0; /* aqua */
+  --success: #46b25e; /* meadow */
+  --alert: #ff6f4d; /* coral */
+
+  /* Surfaces + ink */
+  --surface: #fbf7ec; /* cream */
+  --surface-raised: #ffffff;
+  --ink: #1c2733;
+  --muted: #6f695d; /* sand */
+  --border: #e4ddc9;
+
+  /* Type */
+  --font-display: 'Fredoka', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radii + elevation */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 8px rgba(28, 39, 51, 0.08);
+
+  /* Touch hard-rules: minimum tap target */
+  --tap-min: 44px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--brand-primary-deep);
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--brand-primary);
+}
