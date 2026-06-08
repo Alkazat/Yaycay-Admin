@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth/session';
 import { createPromptVersion, activatePrompt } from '@/lib/data';
+import { recordAudit } from '@/lib/audit';
 import type { AiModel } from '@/lib/contracts/types';
 
 const MODELS: AiModel[] = ['claude-sonnet', 'claude-opus', 'gemini', 'openai'];
@@ -39,6 +40,12 @@ export async function createVersionAction(
     model,
     by: session.email,
   });
+  await recordAudit({
+    actor: session.email,
+    action: 'prompt.version.create',
+    target: created.id,
+    details: `model ${created.model}`,
+  });
   revalidatePath('/prompts');
   return {
     ok: true,
@@ -48,10 +55,15 @@ export async function createVersionAction(
 
 /** Activate a specific version for its task. */
 export async function activateAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const session = await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (id) {
     await activatePrompt(id);
+    await recordAudit({
+      actor: session.email,
+      action: 'prompt.activate',
+      target: id,
+    });
     revalidatePath('/prompts');
   }
 }

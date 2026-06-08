@@ -1,5 +1,11 @@
 import 'server-only';
-import type { AiJob, ModelRoute, Prompt } from '@/lib/contracts/types';
+import type {
+  AiJob,
+  AuditEntry,
+  CustomerSummary,
+  ModelRoute,
+  Prompt,
+} from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 
 /*
@@ -14,6 +20,8 @@ import * as stubs from '@/lib/data/stubs';
 const prompts: Prompt[] = stubs.stubPrompts.map((p) => ({ ...p }));
 const modelRoutes: ModelRoute[] = stubs.stubModelRoutes.map((r) => ({ ...r }));
 const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
+const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
+const audit: AuditEntry[] = [];
 
 export const devStore = {
   getPrompts(): Prompt[] {
@@ -37,5 +45,23 @@ export const devStore = {
   },
   addJob(job: AiJob): void {
     jobs.unshift({ ...job });
+  },
+  getCustomers(): CustomerSummary[] {
+    return customers.map((c) => ({ ...c }));
+  },
+  setDeletionRequested(
+    userId: string,
+    value: boolean,
+  ): CustomerSummary | undefined {
+    const found = customers.find((c) => c.userId === userId);
+    if (!found) return undefined;
+    found.deletionRequested = value;
+    return { ...found };
+  },
+  getAudit(): AuditEntry[] {
+    return audit.map((a) => ({ ...a }));
+  },
+  addAudit(entry: AuditEntry): void {
+    audit.unshift({ ...entry });
   },
 };
