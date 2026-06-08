@@ -70,8 +70,30 @@ export async function listModelRoutes(): Promise<ModelRoute[]> {
 }
 
 export async function listJobs(): Promise<AiJob[]> {
-  if (!isSupabaseConfigured()) return stubs.stubJobs;
+  if (!isSupabaseConfigured()) return devStore.getJobs();
   return notWiredYet('listJobs');
+}
+
+/**
+ * Retry a failed job. Per the v0.2 contract, this re-enqueues by writing a new
+ * ai_jobs row (queued), leaving the failed row as history. In stub mode this
+ * writes to the dev store; with BE configured this is POST /admin/jobs/{id}/retry.
+ */
+export async function retryJob(id: string): Promise<AiJob | null> {
+  if (!isSupabaseConfigured()) {
+    const original = devStore.findJob(id);
+    if (!original || original.status !== 'failed') return null;
+    const requeued: AiJob = {
+      ...original,
+      id: `${original.id}-retry-${Date.now()}`,
+      status: 'queued',
+      createdAt: new Date().toISOString(),
+      error: undefined,
+    };
+    devStore.addJob(requeued);
+    return requeued;
+  }
+  return notWiredYet('retryJob');
 }
 
 export async function listTrips(): Promise<TripSummary[]> {
