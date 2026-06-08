@@ -10,6 +10,12 @@ import type {
   TripSummary,
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
+import { devStore } from '@/lib/data/store';
+import {
+  buildNewVersion,
+  withActivated,
+  type NewVersionInput,
+} from '@/lib/prompts/versioning';
 
 /*
  * The admin data layer.
@@ -29,12 +35,37 @@ function notWiredYet(resource: string): never {
 }
 
 export async function listPrompts(): Promise<Prompt[]> {
-  if (!isSupabaseConfigured()) return stubs.stubPrompts;
+  if (!isSupabaseConfigured()) return devStore.getPrompts();
   return notWiredYet('listPrompts');
 }
 
+/**
+ * Create a new immutable version for a task (inactive until activated). In stub
+ * mode this writes to the dev store; with BE configured this is the
+ * POST /admin/prompts/{id}/versions call.
+ */
+export async function createPromptVersion(
+  input: NewVersionInput,
+): Promise<Prompt> {
+  if (!isSupabaseConfigured()) {
+    const created = buildNewVersion(devStore.getPrompts(), input);
+    devStore.addPrompt(created);
+    return created;
+  }
+  return notWiredYet('createPromptVersion');
+}
+
+/** Activate a version, deactivating its siblings (POST /admin/prompts/{id}/activate). */
+export async function activatePrompt(id: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    devStore.replacePrompts(withActivated(devStore.getPrompts(), id));
+    return;
+  }
+  return notWiredYet('activatePrompt');
+}
+
 export async function listModelRoutes(): Promise<ModelRoute[]> {
-  if (!isSupabaseConfigured()) return stubs.stubModelRoutes;
+  if (!isSupabaseConfigured()) return devStore.getModelRoutes();
   return notWiredYet('listModelRoutes');
 }
 
