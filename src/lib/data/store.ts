@@ -1,5 +1,5 @@
 import 'server-only';
-import type { ModelRoute, Prompt } from '@/lib/contracts/types';
+import type { AiJob, ModelRoute, Prompt } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 
 /*
@@ -13,6 +13,7 @@ import * as stubs from '@/lib/data/stubs';
 
 const prompts: Prompt[] = stubs.stubPrompts.map((p) => ({ ...p }));
 const modelRoutes: ModelRoute[] = stubs.stubModelRoutes.map((r) => ({ ...r }));
+const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
 
 export const devStore = {
   getPrompts(): Prompt[] {
@@ -26,5 +27,15 @@ export const devStore = {
   },
   getModelRoutes(): ModelRoute[] {
     return modelRoutes.map((r) => ({ ...r }));
+  },
+  getJobs(): AiJob[] {
+    return jobs.map((j) => ({ ...j }));
+  },
+  findJob(id: string): AiJob | undefined {
+    const found = jobs.find((j) => j.id === id);
+    return found ? { ...found } : undefined;
+  },
+  addJob(job: AiJob): void {
+    jobs.unshift({ ...job });
   },
 };
