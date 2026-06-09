@@ -6,6 +6,7 @@ import type {
   ModelRoute,
   ProductSummary,
   Prompt,
+  ReviewItem,
   TripContent,
   TripSummary,
 } from '@/lib/contracts/types';
@@ -16,6 +17,11 @@ import {
   withActivated,
   type NewVersionInput,
 } from '@/lib/prompts/versioning';
+import {
+  applyDecision,
+  pendingFirst,
+  type ReviewDecision,
+} from '@/lib/review/state';
 
 /*
  * The admin data layer.
@@ -130,4 +136,33 @@ export async function requestCustomerDeletion(
     return devStore.setDeletionRequested(userId, true) ?? null;
   }
   return notWiredYet('requestCustomerDeletion');
+}
+
+export async function listReviewItems(): Promise<ReviewItem[]> {
+  if (!isSupabaseConfigured()) return pendingFirst(devStore.getReviewItems());
+  return notWiredYet('listReviewItems');
+}
+
+/**
+ * Advance a review item through the quality bar (approve, then publish).
+ * Maps to POST /admin/content-review/{tripId}/approve and the publish step.
+ * Returns the updated item, or null if the transition was invalid.
+ */
+export async function decideReview(
+  tripId: string,
+  decision: ReviewDecision,
+): Promise<ReviewItem | null> {
+  if (!isSupabaseConfigured()) {
+    const current = devStore.getReviewItems();
+    const next = applyDecision(current, tripId, decision);
+    const updated = next.find((r) => r.tripId === tripId);
+    if (
+      !updated ||
+      updated.status === current.find((c) => c.tripId === tripId)?.status
+    ) {
+      return null;
+    }
+    return devStore.setReviewStatus(tripId, updated.status) ?? null;
+  }
+  return notWiredYet('decideReview');
 }

@@ -5,6 +5,8 @@ import type {
   CustomerSummary,
   ModelRoute,
   Prompt,
+  ReviewItem,
+  ReviewStatus,
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 
@@ -21,6 +23,7 @@ const prompts: Prompt[] = stubs.stubPrompts.map((p) => ({ ...p }));
 const modelRoutes: ModelRoute[] = stubs.stubModelRoutes.map((r) => ({ ...r }));
 const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
 const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
+const reviewItems: ReviewItem[] = stubs.stubReviewItems.map((r) => ({ ...r }));
 const audit: AuditEntry[] = [];
 
 export const devStore = {
@@ -56,6 +59,18 @@ export const devStore = {
     const found = customers.find((c) => c.userId === userId);
     if (!found) return undefined;
     found.deletionRequested = value;
+    return { ...found };
+  },
+  getReviewItems(): ReviewItem[] {
+    return reviewItems.map((r) => ({ ...r }));
+  },
+  setReviewStatus(
+    tripId: string,
+    status: ReviewStatus,
+  ): ReviewItem | undefined {
+    const found = reviewItems.find((r) => r.tripId === tripId);
+    if (!found) return undefined;
+    found.status = status;
     return { ...found };
   },
   getAudit(): AuditEntry[] {

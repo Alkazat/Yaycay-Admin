@@ -135,3 +135,15 @@ export interface AuditEntry {
   at: string;
   details?: string;
 }
+
+export type ReviewStatus = 'pending' | 'approved' | 'published';
+
+/** AI-generated content awaiting the quality bar before it reaches a family. */
+export interface ReviewItem {
+  tripId: string;
+  destination: string;
+  status: ReviewStatus;
+  promptVersion: number;
+  generatedAt: string;
+  summary: string;
+}
