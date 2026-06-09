@@ -6,7 +6,14 @@ import {
   isBrowserSupabaseConfigured,
 } from '@/lib/supabase/browser';
 
-type Mode = 'loading' | 'email' | 'sent' | 'enroll' | 'verify' | 'configerror';
+type Mode =
+  | 'loading'
+  | 'email'
+  | 'sent'
+  | 'enroll'
+  | 'verify'
+  | 'configerror'
+  | 'denied';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -56,28 +63,41 @@ export function SignIn() {
       setMode('configerror');
       return;
     }
+    // The server bounced us here because the account is signed in and has
+    // verified MFA, but is not an admin. Stop and explain - never loop back.
+    const denied =
+      new URLSearchParams(window.location.search).get('denied') === 'not-admin';
+    if (denied) {
+      setMode('denied');
+      return;
+    }
     const supabase = getBrowserSupabase();
     (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) {
+          setMode('email');
+          return;
+        }
+        const { data: aal } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal?.currentLevel === 'aal2') {
+          window.location.href = '/';
+          return;
+        }
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const totp = factors?.totp?.[0];
+        if (totp) {
+          setFactorId(totp.id);
+          setMode('verify');
+        } else {
+          await beginEnroll(supabase);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Sign-in could not start.');
         setMode('email');
-        return;
-      }
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal?.currentLevel === 'aal2') {
-        window.location.href = '/';
-        return;
-      }
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const totp = factors?.totp?.[0];
-      if (totp) {
-        setFactorId(totp.id);
-        setMode('verify');
-      } else {
-        await beginEnroll(supabase);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,6 +167,23 @@ export function SignIn() {
         environment. (You will sign in with an email magic link, then a 2FA
         code.)
       </p>
+    );
+  }
+
+  if (mode === 'denied') {
+    return (
+      <div>
+        <p style={{ marginTop: 0 }}>
+          You are signed in and your 2FA is verified, but this account is not an
+          admin yet. Ask for the <strong>admin</strong> role to be granted to
+          your account, then sign in again.
+        </p>
+        <form action="/api/auth/signout" method="post">
+          <button type="submit" style={buttonStyle}>
+            Sign out and try another account
+          </button>
+        </form>
+      </div>
     );
   }
 
