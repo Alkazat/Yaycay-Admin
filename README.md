@@ -69,6 +69,8 @@ without a live identity store during development, set `ADMIN_DEV_BYPASS=true`
 CI runs typecheck, lint, unit tests, build and E2E. The deploy smoke test hits
 `/api/health` and asserts the gate.
 
+See `docs/DEPLOY.md` for the full Vercel + domain + env setup.
+
 ## What is stubbed (foundation pass)
 
 This is the scaffold + foundation. The structure, auth gate, design tokens,
