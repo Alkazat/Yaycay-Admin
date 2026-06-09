@@ -1,5 +1,5 @@
 import 'server-only';
-import { isSupabaseConfigured } from '@/lib/config';
+import { isAdminDataLive } from '@/lib/config';
 import type {
   AiJob,
   CustomerSummary,
@@ -42,7 +42,7 @@ function notWiredYet(resource: string): never {
 }
 
 export async function listPrompts(): Promise<Prompt[]> {
-  if (!isSupabaseConfigured()) return devStore.getPrompts();
+  if (!isAdminDataLive()) return devStore.getPrompts();
   return notWiredYet('listPrompts');
 }
 
@@ -54,7 +54,7 @@ export async function listPrompts(): Promise<Prompt[]> {
 export async function createPromptVersion(
   input: NewVersionInput,
 ): Promise<Prompt> {
-  if (!isSupabaseConfigured()) {
+  if (!isAdminDataLive()) {
     const created = buildNewVersion(devStore.getPrompts(), input);
     devStore.addPrompt(created);
     return created;
@@ -64,7 +64,7 @@ export async function createPromptVersion(
 
 /** Activate a version, deactivating its siblings (POST /admin/prompts/{id}/activate). */
 export async function activatePrompt(id: string): Promise<void> {
-  if (!isSupabaseConfigured()) {
+  if (!isAdminDataLive()) {
     devStore.replacePrompts(withActivated(devStore.getPrompts(), id));
     return;
   }
@@ -72,12 +72,12 @@ export async function activatePrompt(id: string): Promise<void> {
 }
 
 export async function listModelRoutes(): Promise<ModelRoute[]> {
-  if (!isSupabaseConfigured()) return devStore.getModelRoutes();
+  if (!isAdminDataLive()) return devStore.getModelRoutes();
   return notWiredYet('listModelRoutes');
 }
 
 export async function listJobs(): Promise<AiJob[]> {
-  if (!isSupabaseConfigured()) return devStore.getJobs();
+  if (!isAdminDataLive()) return devStore.getJobs();
   return notWiredYet('listJobs');
 }
 
@@ -87,7 +87,7 @@ export async function listJobs(): Promise<AiJob[]> {
  * writes to the dev store; with BE configured this is POST /admin/jobs/{id}/retry.
  */
 export async function retryJob(id: string): Promise<AiJob | null> {
-  if (!isSupabaseConfigured()) {
+  if (!isAdminDataLive()) {
     const original = devStore.findJob(id);
     if (!original || original.status !== 'failed') return null;
     const requeued: AiJob = {
@@ -104,29 +104,29 @@ export async function retryJob(id: string): Promise<AiJob | null> {
 }
 
 export async function listTrips(): Promise<TripSummary[]> {
-  if (!isSupabaseConfigured()) return stubs.stubTrips;
+  if (!isAdminDataLive()) return stubs.stubTrips;
   return notWiredYet('listTrips');
 }
 
 export async function getTripContent(
   tripId: string,
 ): Promise<TripContent | null> {
-  if (!isSupabaseConfigured()) return stubs.stubTripContent[tripId] ?? null;
+  if (!isAdminDataLive()) return stubs.stubTripContent[tripId] ?? null;
   return notWiredYet('getTripContent');
 }
 
 export async function listProducts(): Promise<ProductSummary[]> {
-  if (!isSupabaseConfigured()) return stubs.stubProducts;
+  if (!isAdminDataLive()) return stubs.stubProducts;
   return notWiredYet('listProducts');
 }
 
 export async function listPurchases(): Promise<Purchase[]> {
-  if (!isSupabaseConfigured()) return stubs.stubPurchases;
+  if (!isAdminDataLive()) return stubs.stubPurchases;
   return notWiredYet('listPurchases');
 }
 
 export async function listCustomers(): Promise<CustomerSummary[]> {
-  if (!isSupabaseConfigured()) return devStore.getCustomers();
+  if (!isAdminDataLive()) return devStore.getCustomers();
   return notWiredYet('listCustomers');
 }
 
@@ -138,14 +138,14 @@ export async function listCustomers(): Promise<CustomerSummary[]> {
 export async function requestCustomerDeletion(
   userId: string,
 ): Promise<CustomerSummary | null> {
-  if (!isSupabaseConfigured()) {
+  if (!isAdminDataLive()) {
     return devStore.setDeletionRequested(userId, true) ?? null;
   }
   return notWiredYet('requestCustomerDeletion');
 }
 
 export async function listReviewItems(): Promise<ReviewItem[]> {
-  if (!isSupabaseConfigured()) return pendingFirst(devStore.getReviewItems());
+  if (!isAdminDataLive()) return pendingFirst(devStore.getReviewItems());
   return notWiredYet('listReviewItems');
 }
 
@@ -158,7 +158,7 @@ export async function decideReview(
   tripId: string,
   decision: ReviewDecision,
 ): Promise<ReviewItem | null> {
-  if (!isSupabaseConfigured()) {
+  if (!isAdminDataLive()) {
     const current = devStore.getReviewItems();
     const next = applyDecision(current, tripId, decision);
     const updated = next.find((r) => r.tripId === tripId);
