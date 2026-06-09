@@ -114,6 +114,20 @@ export async function listProducts(): Promise<ProductSummary[]> {
 }
 
 export async function listCustomers(): Promise<CustomerSummary[]> {
-  if (!isSupabaseConfigured()) return stubs.stubCustomers;
+  if (!isSupabaseConfigured()) return devStore.getCustomers();
   return notWiredYet('listCustomers');
+}
+
+/**
+ * Record a data-deletion request for a customer (POST
+ * /admin/customers/{id}/deletion-request). The actual disposal runs server-side
+ * per the retention policy; this flags the intent and is audited by the caller.
+ */
+export async function requestCustomerDeletion(
+  userId: string,
+): Promise<CustomerSummary | null> {
+  if (!isSupabaseConfigured()) {
+    return devStore.setDeletionRequested(userId, true) ?? null;
+  }
+  return notWiredYet('requestCustomerDeletion');
 }

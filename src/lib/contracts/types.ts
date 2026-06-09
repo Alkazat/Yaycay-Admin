@@ -121,3 +121,17 @@ export interface CustomerSummary {
   retentionExpiresAt: string | null;
   deletionRequested: boolean;
 }
+
+/**
+ * Audit record for an admin action. The security posture requires every
+ * /admin/* write to be audited (actor, action, target, when). BE owns the
+ * canonical audit store; Admin records and displays it.
+ */
+export interface AuditEntry {
+  id: string;
+  actor: string;
+  action: string;
+  target: string;
+  at: string;
+  details?: string;
+}

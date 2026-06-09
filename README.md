@@ -51,7 +51,8 @@ without a live identity store during development, set `ADMIN_DEV_BYPASS=true`
 | `/jobs`                     | `ai_jobs` stream; failures; cap usage              |
 | `/content-review`           | Approve/edit generated content before publish      |
 | `/commerce`                 | Products/prices (Stripe is source of truth)        |
-| `/customers`                | Entitlement, retention, deletion requests          |
+| `/customers`                | Entitlement, retention, audited deletion requests  |
+| `/audit`                    | Admin audit trail: actor, action, target, when     |
 
 ## Testing
 
