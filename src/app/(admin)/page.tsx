@@ -1,6 +1,6 @@
 import { PageHeader, Stat, Card } from '@/components/ui';
 import { listJobs, listTrips, listPrompts } from '@/lib/data';
-import { isSupabaseConfigured } from '@/lib/config';
+import { isAdminDataLive } from '@/lib/config';
 
 export default async function DashboardPage() {
   const [jobs, trips, prompts] = await Promise.all([
@@ -27,12 +27,13 @@ export default async function DashboardPage() {
         <Stat label="Failed jobs" value={failed} />
         <Stat label="Active prompts" value={activePrompts} />
       </div>
-      {!isSupabaseConfigured() ? (
+      {!isAdminDataLive() ? (
         <Card title="Running on stub data">
           <p style={{ margin: 0 }}>
-            Supabase / BE are not configured, so screens are showing local
-            fixtures. Set the env values in <code>.env.local</code> to connect
-            the admin Supabase client and the BE admin endpoints.
+            Sign-in is live, but the BE data API is not configured yet, so
+            screens show sample data. Set <code>NEXT_PUBLIC_API_BASE</code> once
+            BE publishes the admin endpoints (@yaycay/contracts v0.2) to switch
+            to real data.
           </p>
         </Card>
       ) : null}

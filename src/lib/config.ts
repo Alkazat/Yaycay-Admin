@@ -19,3 +19,15 @@ export const config = {
 export function isSupabaseConfigured(): boolean {
   return Boolean(config.supabase.url && config.supabase.serviceRoleKey);
 }
+
+/**
+ * True when the admin DATA source (BE /admin/* endpoints) is configured.
+ *
+ * This is deliberately separate from auth: Supabase can be configured for
+ * sign-in while the BE data API is not built yet. Until NEXT_PUBLIC_API_BASE
+ * is set, the data layer serves local stubs so the screens work, even though
+ * sign-in is real.
+ */
+export function isAdminDataLive(): boolean {
+  return Boolean(config.apiBase);
+}
