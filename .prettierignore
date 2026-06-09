@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+# Handoff docs are kept verbatim as supplied.
+00-MODEL-CONTEXT.md
+03-ADMIN-HANDOFF.md
