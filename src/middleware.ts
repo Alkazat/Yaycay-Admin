@@ -9,7 +9,13 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Public paths: the login flow, Next internals, and static assets.
  */
 
-const PUBLIC_PREFIXES = ['/login', '/api/health', '/_next', '/favicon.ico'];
+const PUBLIC_PREFIXES = [
+  '/login',
+  '/auth',
+  '/api/health',
+  '/_next',
+  '/favicon.ico',
+];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
