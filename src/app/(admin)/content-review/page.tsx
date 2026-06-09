@@ -1,37 +1,84 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
-import { listJobs } from '@/lib/data';
+import { listReviewItems } from '@/lib/data';
+import type { ReviewStatus } from '@/lib/contracts/types';
+import { approveAction, publishAction } from './actions';
 
-/*
- * Content review: approve/edit AI-generated content before publish.
- * Scaffold lists recently generated content awaiting review (derived here from
- * succeeded generation jobs); the approve/edit/publish flow lands next.
- */
+const tone: Record<ReviewStatus, 'default' | 'success' | 'alert' | 'info'> = {
+  pending: 'alert',
+  approved: 'info',
+  published: 'success',
+};
+
+const buttonStyle = {
+  minHeight: 'var(--tap-min)',
+  padding: '0 var(--space-6)',
+  border: 'none',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--brand-cta)',
+  color: 'var(--ink)',
+  fontFamily: 'var(--font-display)',
+  fontWeight: 600,
+  cursor: 'pointer',
+} as const;
+
 export default async function ContentReviewPage() {
-  const jobs = await listJobs();
-  const awaiting = jobs.filter(
-    (j) => j.kind === 'generation' && j.status === 'succeeded',
-  );
+  const items = await listReviewItems();
+
   return (
     <>
       <PageHeader
         title="Content review"
-        subtitle="Approve or edit AI-generated content before it reaches a family."
+        subtitle="Approve, then publish AI-generated content before it reaches a family. Quality bar: pending to approved to published."
       />
-      {awaiting.length === 0 ? (
+      {items.length === 0 ? (
         <Card>
           <p style={{ margin: 0 }}>Nothing awaiting review.</p>
         </Card>
       ) : (
-        awaiting.map((j) => (
-          <Card key={j.id} title={`Trip ${j.tripId}`}>
-            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-              <Badge tone="info">generation</Badge>
-              <Badge>prompt v{j.promptVersion}</Badge>
-              <Badge tone="success">ready to review</Badge>
+        items.map((item) => (
+          <Card
+            key={item.tripId}
+            title={`${item.destination} (${item.tripId})`}
+          >
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--space-2)',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
+              <Badge tone={tone[item.status]}>{item.status}</Badge>
+              <Badge>prompt v{item.promptVersion}</Badge>
+              <span style={{ color: 'var(--muted)' }}>
+                generated {item.generatedAt}
+              </span>
             </div>
-            <p style={{ color: 'var(--muted)', marginBottom: 0 }}>
-              Generated {j.createdAt}. Review and publish flow coming next.
-            </p>
+            <p style={{ marginTop: 0 }}>{item.summary}</p>
+            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+              {item.status === 'pending' ? (
+                <form action={approveAction}>
+                  <input type="hidden" name="tripId" value={item.tripId} />
+                  <button type="submit" style={buttonStyle}>
+                    Approve
+                  </button>
+                </form>
+              ) : null}
+              {item.status === 'approved' ? (
+                <form action={publishAction}>
+                  <input type="hidden" name="tripId" value={item.tripId} />
+                  <button type="submit" style={buttonStyle}>
+                    Publish
+                  </button>
+                </form>
+              ) : null}
+              {item.status === 'published' ? (
+                <span style={{ color: 'var(--success)' }}>
+                  Published to the family.
+                </span>
+              ) : null}
+            </div>
           </Card>
         ))
       )}

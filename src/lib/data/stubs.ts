@@ -4,6 +4,7 @@ import type {
   ModelRoute,
   ProductSummary,
   Prompt,
+  ReviewItem,
   TripContent,
   TripSummary,
 } from '@/lib/contracts/types';
@@ -155,5 +156,24 @@ export const stubCustomers: CustomerSummary[] = [
     tier: 'byo',
     retentionExpiresAt: null,
     deletionRequested: true,
+  },
+];
+
+export const stubReviewItems: ReviewItem[] = [
+  {
+    tripId: 't_123',
+    destination: 'Singapore',
+    status: 'pending',
+    promptVersion: 3,
+    generatedAt: '2026-06-07T10:15:00Z',
+    summary: '11 days, kid explorer + grown-ups guide. Sentosa, Gardens, zoo.',
+  },
+  {
+    tripId: 't_456',
+    destination: 'Gold Coast',
+    status: 'approved',
+    promptVersion: 3,
+    generatedAt: '2026-06-06T09:00:00Z',
+    summary: '9 days, beaches + theme parks. Awaiting publish.',
   },
 ];
