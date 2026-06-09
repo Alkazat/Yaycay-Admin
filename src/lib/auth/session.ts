@@ -76,6 +76,9 @@ export async function requireAdmin(): Promise<AdminSession> {
     if (decision.reason === 'mfa-required') {
       redirect('/login?step=mfa');
     }
+    if (decision.reason === 'not-admin') {
+      redirect('/login?denied=not-admin');
+    }
     redirect('/login');
   }
 
