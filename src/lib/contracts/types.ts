@@ -114,6 +114,18 @@ export interface ProductSummary {
   amountUsd: number;
 }
 
+/** A purchase / entitlement row. Stripe is the source of truth; this is the
+ * read view BE projects into `purchases`. */
+export interface Purchase {
+  id: string;
+  email: string;
+  productName: string;
+  priceId: string;
+  amountUsd: number;
+  tier: TripTier | null;
+  purchasedAt: string;
+}
+
 export interface CustomerSummary {
   userId: string;
   email: string;

@@ -36,7 +36,7 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 | 17  | `decideReview` (publish)  | publish step (TBD path)                       | Content review | Outstanding                                |
 | 18  | (edit)                    | `POST /admin/content-review/{tripId}/edit`    | Content review | Outstanding (UI not built)                 |
 | 19  | `listProducts`            | `GET /admin/products`                         | Commerce       | Outstanding                                |
-| 20  | (purchases)               | `GET /admin/purchases?query=`                 | Commerce       | Outstanding (UI not built)                 |
+| 20  | `listPurchases`           | `GET /admin/purchases?query=`                 | Commerce       | Outstanding                                |
 
 ## Cross-cutting (not endpoint-specific)
 

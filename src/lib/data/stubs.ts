@@ -4,6 +4,7 @@ import type {
   ModelRoute,
   ProductSummary,
   Prompt,
+  Purchase,
   ReviewItem,
   TripContent,
   TripSummary,
@@ -175,5 +176,35 @@ export const stubReviewItems: ReviewItem[] = [
     promptVersion: 3,
     generatedAt: '2026-06-06T09:00:00Z',
     summary: '9 days, beaches + theme parks. Awaiting publish.',
+  },
+];
+
+export const stubPurchases: Purchase[] = [
+  {
+    id: 'pur_1',
+    email: 'family@example.com',
+    productName: 'Holiday (use-our-AI)',
+    priceId: 'price_holiday_ai',
+    amountUsd: 129,
+    tier: 'ours',
+    purchasedAt: '2026-05-30T08:12:00Z',
+  },
+  {
+    id: 'pur_2',
+    email: 'another@example.com',
+    productName: 'Holiday (BYO-AI)',
+    priceId: 'price_holiday_byo',
+    amountUsd: 59,
+    tier: 'byo',
+    purchasedAt: '2026-06-02T19:40:00Z',
+  },
+  {
+    id: 'pur_3',
+    email: 'family@example.com',
+    productName: 'Keep data (annual)',
+    priceId: 'price_datakeep_annual',
+    amountUsd: 9,
+    tier: 'ours',
+    purchasedAt: '2026-06-05T11:05:00Z',
   },
 ];

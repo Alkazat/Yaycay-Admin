@@ -6,6 +6,7 @@ import type {
   ModelRoute,
   ProductSummary,
   Prompt,
+  Purchase,
   ReviewItem,
   TripContent,
   TripSummary,
@@ -117,6 +118,11 @@ export async function getTripContent(
 export async function listProducts(): Promise<ProductSummary[]> {
   if (!isSupabaseConfigured()) return stubs.stubProducts;
   return notWiredYet('listProducts');
+}
+
+export async function listPurchases(): Promise<Purchase[]> {
+  if (!isSupabaseConfigured()) return stubs.stubPurchases;
+  return notWiredYet('listPurchases');
 }
 
 export async function listCustomers(): Promise<CustomerSummary[]> {
