@@ -1,5 +1,5 @@
 /*
- * Local stub of the admin-scoped DTOs from @yaycay/contracts.
+ * Local stub of the admin-scoped DTOs from @alkazat/contracts.
  *
  * BE owns the real contract; the Admin app consumes it as a pinned package.
  * Until that package is published and wired in, these types mirror the model
@@ -7,7 +7,7 @@
  *
  * Golden rule (model context section 3): never read a field that is not in
  * the contract. When the real package lands, replace this import surface with
- * `import type { ... } from '@yaycay/contracts'` and reconcile any drift.
+ * `import type { ... } from '@alkazat/contracts'` and reconcile any drift.
  */
 
 export type Role = 'user' | 'admin';
