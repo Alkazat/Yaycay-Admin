@@ -23,7 +23,7 @@ the BE contract. It never runs inference itself; it configures what BE runs.
 - Next.js (App Router) + TypeScript on Node 20, deployed on Vercel as a
   separate, off-domain project.
 - Supabase admin client against the same DB (server-only, service-role).
-- `@yaycay/contracts` for admin DTOs. Until that package is wired in, local
+- `@alkazat/contracts` for admin DTOs. Until that package is wired in, local
   stand-ins live in `src/lib/contracts/types.ts` and must not diverge from the
   published contract.
 

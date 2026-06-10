@@ -5,7 +5,7 @@
 The Admin app scaffold is built and running on local stubs. It now needs the
 real admin-scoped surface from BE, which owns the contract. This is a
 request-for-change under model-context section 3: please implement the
-`/admin/*` endpoints below, bump `@yaycay/contracts` to `0.2.0`, and publish.
+`/admin/*` endpoints below, bump `@alkazat/contracts` to `0.2.0`, and publish.
 Admin will then pin `^0.2.0`, delete its local type stand-ins, and wire its
 data accessors.
 
@@ -117,7 +117,7 @@ interface ProductSummary {
 
 ## What we need back (for the Admin thread)
 
-- The published `@yaycay/contracts@0.2.0` (types + `openapi.yaml`).
+- The published `@alkazat/contracts@0.2.0` (types + `openapi.yaml`).
 - Confirmation of the auth claim shape Admin should expect (`role` location in
   the JWT, AAL level).
 - Any field renames vs the DTOs above, so Admin reconciles its stand-ins.
