@@ -7,8 +7,13 @@ landed. Until an endpoint is live, the matching data accessor in
 - **Target version:** `@alkazat/contracts@0.5.0` (published by BE; supersedes
   the original v0.2 proposal - the live surface must be reconciled against the
   published package, since it may differ from the v0.2 request)
-- **Published version Admin is pinned to:** none yet (using local stand-ins in
-  `src/lib/contracts/types.ts`)
+- **Published version Admin is pinned to:** none yet - local stand-ins in
+  `src/lib/contracts/types.ts` now mirror the published v0.5.0 shapes
+- **Client wiring: DONE.** Every `/admin/*` accessor in `src/lib/data/index.ts`
+  calls the live API (`src/lib/data/api.ts`, admin JWT) when
+  `NEXT_PUBLIC_API_BASE` is set, and serves stubs otherwise. Remaining to go
+  live: install `@alkazat/contracts@^0.5.0` for the real types, set
+  `NEXT_PUBLIC_API_BASE` in Vercel, and verify against staging.
 - **Spec source:** `docs/be-contract-proposal-admin-v0.2.md`
 - **BE handoff brief:** see the contracts bundle (HANDOFF-TO-BE.md)
 

@@ -13,6 +13,7 @@ import type {
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 import { devStore } from '@/lib/data/store';
+import { adminApi, type Page } from '@/lib/data/api';
 import {
   buildNewVersion,
   withActivated,
@@ -25,31 +26,22 @@ import {
 } from '@/lib/review/state';
 
 /*
- * The admin data layer.
+ * The admin data layer. Each accessor returns contract-shaped data.
  *
- * Each accessor returns contract-shaped data. When Supabase / BE are not
- * configured, it serves local fixtures so the UI is fully navigable in dev.
- * When configured, the real query belongs here (admin Supabase client or the
- * BE /admin/* endpoints) - this is the single place to wire it, and the single
- * place to attach audit logging for every admin read/write.
+ * When the BE data API is configured (isAdminDataLive), accessors call the
+ * live /admin/* surface from @alkazat/contracts via adminApi. Otherwise they
+ * serve local fixtures so every screen is navigable without a live BE.
  */
-
-function notWiredYet(resource: string): never {
-  throw new Error(
-    `Data accessor for "${resource}" is not wired to Supabase/BE yet. ` +
-      'Implement the real query in src/lib/data, or run with stubs (unset Supabase env).',
-  );
-}
 
 export async function listPrompts(): Promise<Prompt[]> {
   if (!isAdminDataLive()) return devStore.getPrompts();
-  return notWiredYet('listPrompts');
+  const page = await adminApi.get<Page<Prompt>>('/admin/prompts');
+  return page.items;
 }
 
 /**
- * Create a new immutable version for a task (inactive until activated). In stub
- * mode this writes to the dev store; with BE configured this is the
- * POST /admin/prompts/{id}/versions call.
+ * Create a new version for a task. Contract: POST /admin/prompts/{id}/versions
+ * on an existing prompt, or POST /admin/prompts to create the task's first one.
  */
 export async function createPromptVersion(
   input: NewVersionInput,
@@ -59,7 +51,15 @@ export async function createPromptVersion(
     devStore.addPrompt(created);
     return created;
   }
-  return notWiredYet('createPromptVersion');
+  const body = { title: input.title, body: input.body, model: input.model };
+  const existing = await adminApi.get<Page<Prompt>>(
+    `/admin/prompts?task=${encodeURIComponent(input.task)}`,
+  );
+  const prompt = existing.items[0];
+  if (prompt) {
+    return adminApi.post<Prompt>(`/admin/prompts/${prompt.id}/versions`, body);
+  }
+  return adminApi.post<Prompt>('/admin/prompts', { task: input.task, ...body });
 }
 
 /** Activate a version, deactivating its siblings (POST /admin/prompts/{id}/activate). */
@@ -68,24 +68,24 @@ export async function activatePrompt(id: string): Promise<void> {
     devStore.replacePrompts(withActivated(devStore.getPrompts(), id));
     return;
   }
-  return notWiredYet('activatePrompt');
+  await adminApi.post<Prompt>(`/admin/prompts/${id}/activate`);
 }
 
 export async function listModelRoutes(): Promise<ModelRoute[]> {
   if (!isAdminDataLive()) return devStore.getModelRoutes();
-  return notWiredYet('listModelRoutes');
+  const res = await adminApi.get<{ items: ModelRoute[] }>(
+    '/admin/model-routes',
+  );
+  return res.items;
 }
 
 export async function listJobs(): Promise<AiJob[]> {
   if (!isAdminDataLive()) return devStore.getJobs();
-  return notWiredYet('listJobs');
+  const page = await adminApi.get<Page<AiJob>>('/admin/jobs');
+  return page.items;
 }
 
-/**
- * Retry a failed job. Per the v0.2 contract, this re-enqueues by writing a new
- * ai_jobs row (queued), leaving the failed row as history. In stub mode this
- * writes to the dev store; with BE configured this is POST /admin/jobs/{id}/retry.
- */
+/** Retry a failed job (POST /admin/jobs/{id}/retry; re-enqueues, cap enforced). */
 export async function retryJob(id: string): Promise<AiJob | null> {
   if (!isAdminDataLive()) {
     const original = devStore.findJob(id);
@@ -100,59 +100,70 @@ export async function retryJob(id: string): Promise<AiJob | null> {
     devStore.addJob(requeued);
     return requeued;
   }
-  return notWiredYet('retryJob');
+  return adminApi.post<AiJob>(`/admin/jobs/${id}/retry`);
 }
 
 export async function listTrips(): Promise<TripSummary[]> {
   if (!isAdminDataLive()) return stubs.stubTrips;
-  return notWiredYet('listTrips');
+  const page = await adminApi.get<Page<TripSummary>>('/admin/trips');
+  return page.items;
 }
 
 export async function getTripContent(
   tripId: string,
 ): Promise<TripContent | null> {
   if (!isAdminDataLive()) return stubs.stubTripContent[tripId] ?? null;
-  return notWiredYet('getTripContent');
+  try {
+    return await adminApi.get<TripContent>(`/admin/trips/${tripId}/content`);
+  } catch {
+    return null;
+  }
 }
 
 export async function listProducts(): Promise<ProductSummary[]> {
   if (!isAdminDataLive()) return stubs.stubProducts;
-  return notWiredYet('listProducts');
+  const res = await adminApi.get<{ items: ProductSummary[] }>(
+    '/admin/products',
+  );
+  return res.items;
 }
 
 export async function listPurchases(): Promise<Purchase[]> {
   if (!isAdminDataLive()) return stubs.stubPurchases;
-  return notWiredYet('listPurchases');
+  const page = await adminApi.get<Page<Purchase>>('/admin/purchases');
+  return page.items;
 }
 
 export async function listCustomers(): Promise<CustomerSummary[]> {
   if (!isAdminDataLive()) return devStore.getCustomers();
-  return notWiredYet('listCustomers');
+  const page = await adminApi.get<Page<CustomerSummary>>('/admin/customers');
+  return page.items;
 }
 
-/**
- * Record a data-deletion request for a customer (POST
- * /admin/customers/{id}/deletion-request). The actual disposal runs server-side
- * per the retention policy; this flags the intent and is audited by the caller.
- */
+/** Record a data-deletion request (POST /admin/customers/{id}/deletion-request). */
 export async function requestCustomerDeletion(
   userId: string,
 ): Promise<CustomerSummary | null> {
   if (!isAdminDataLive()) {
     return devStore.setDeletionRequested(userId, true) ?? null;
   }
-  return notWiredYet('requestCustomerDeletion');
+  return adminApi.post<CustomerSummary>(
+    `/admin/customers/${userId}/deletion-request`,
+  );
 }
 
 export async function listReviewItems(): Promise<ReviewItem[]> {
   if (!isAdminDataLive()) return pendingFirst(devStore.getReviewItems());
-  return notWiredYet('listReviewItems');
+  const page = await adminApi.get<Page<ReviewItem>>('/admin/content-review');
+  return pendingFirst(page.items);
 }
 
 /**
- * Advance a review item through the quality bar (approve, then publish).
- * Maps to POST /admin/content-review/{tripId}/approve and the publish step.
- * Returns the updated item, or null if the transition was invalid.
+ * Apply a review decision. Contract:
+ *  - approve -> POST /admin/content-review/{tripId}/approve
+ *  - edit    -> POST /admin/content-review/{tripId}/edit with the TripContent.
+ * Until the Admin app has a content editor, "edit" publishes the current
+ * content unchanged. Returns the updated item, or null on an invalid stub move.
  */
 export async function decideReview(
   tripId: string,
@@ -170,5 +181,14 @@ export async function decideReview(
     }
     return devStore.setReviewStatus(tripId, updated.status) ?? null;
   }
-  return notWiredYet('decideReview');
+  if (decision === 'approve') {
+    return adminApi.post<ReviewItem>(`/admin/content-review/${tripId}/approve`);
+  }
+  const content = await adminApi.get<TripContent>(
+    `/admin/trips/${tripId}/content`,
+  );
+  return adminApi.post<ReviewItem>(
+    `/admin/content-review/${tripId}/edit`,
+    content,
+  );
 }

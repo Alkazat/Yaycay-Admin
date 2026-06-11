@@ -46,7 +46,7 @@ export default async function CommercePage() {
             <tr style={{ textAlign: 'left', color: 'var(--muted)' }}>
               <th style={{ padding: 'var(--space-2)' }}>When</th>
               <th style={{ padding: 'var(--space-2)' }}>Customer</th>
-              <th style={{ padding: 'var(--space-2)' }}>Product</th>
+              <th style={{ padding: 'var(--space-2)' }}>Price</th>
               <th style={{ padding: 'var(--space-2)' }}>Tier</th>
               <th style={{ padding: 'var(--space-2)' }}>USD</th>
             </tr>
@@ -57,10 +57,12 @@ export default async function CommercePage() {
                 <td
                   style={{ padding: 'var(--space-2)', color: 'var(--muted)' }}
                 >
-                  {p.purchasedAt}
+                  {p.createdAt}
                 </td>
-                <td style={{ padding: 'var(--space-2)' }}>{p.email}</td>
-                <td style={{ padding: 'var(--space-2)' }}>{p.productName}</td>
+                <td style={{ padding: 'var(--space-2)' }}>{p.ownerEmail}</td>
+                <td style={{ padding: 'var(--space-2)' }}>
+                  <code>{p.priceId}</code>
+                </td>
                 <td style={{ padding: 'var(--space-2)' }}>
                   {p.tier ? <Badge tone="info">{p.tier}</Badge> : '-'}
                 </td>

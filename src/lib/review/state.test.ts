@@ -7,33 +7,36 @@ function item(tripId: string, status: ReviewItem['status']): ReviewItem {
     tripId,
     destination: 'Somewhere',
     status,
-    promptVersion: 1,
     generatedAt: '2026-06-08T00:00:00Z',
-    summary: '...',
+    reviewedAt: null,
+    reviewedBy: null,
   };
 }
 
 describe('canApply', () => {
-  it('allows approve from pending and publish from approved only', () => {
-    expect(canApply('pending', 'approve')).toBe(true);
-    expect(canApply('pending', 'publish')).toBe(false);
-    expect(canApply('approved', 'publish')).toBe(true);
-    expect(canApply('approved', 'approve')).toBe(false);
-    expect(canApply('published', 'publish')).toBe(false);
+  it('only allows decisions on pending items', () => {
+    expect(canApply('pending')).toBe(true);
+    expect(canApply('approved')).toBe(false);
+    expect(canApply('edited')).toBe(false);
   });
 });
 
 describe('applyDecision', () => {
-  it('advances the matching item and leaves others untouched', () => {
-    const items = [item('t_1', 'pending'), item('t_2', 'pending')];
-    const out = applyDecision(items, 't_1', 'approve');
-    expect(out.find((i) => i.tripId === 't_1')?.status).toBe('approved');
-    expect(out.find((i) => i.tripId === 't_2')?.status).toBe('pending');
+  it('approves a pending item', () => {
+    const out = applyDecision([item('t_1', 'pending')], 't_1', 'approve');
+    expect(out[0].status).toBe('approved');
   });
 
-  it('is a no-op for an invalid transition', () => {
-    const items = [item('t_1', 'pending')];
-    expect(applyDecision(items, 't_1', 'publish')).toEqual(items);
+  it('edits a pending item', () => {
+    const out = applyDecision([item('t_1', 'pending')], 't_1', 'edit');
+    expect(out[0].status).toBe('edited');
+  });
+
+  it('leaves other items and already-reviewed items untouched', () => {
+    const items = [item('t_1', 'approved'), item('t_2', 'pending')];
+    const out = applyDecision(items, 't_1', 'edit');
+    expect(out.find((i) => i.tripId === 't_1')?.status).toBe('approved');
+    expect(out.find((i) => i.tripId === 't_2')?.status).toBe('pending');
   });
 
   it('does not mutate the input', () => {
@@ -44,12 +47,12 @@ describe('applyDecision', () => {
 });
 
 describe('pendingFirst', () => {
-  it('orders pending, then approved, then published', () => {
+  it('orders pending, then approved, then edited', () => {
     const out = pendingFirst([
-      item('t_pub', 'published'),
-      item('t_app', 'approved'),
-      item('t_pen', 'pending'),
+      item('t_e', 'edited'),
+      item('t_a', 'approved'),
+      item('t_p', 'pending'),
     ]);
-    expect(out.map((i) => i.tripId)).toEqual(['t_pen', 't_app', 't_pub']);
+    expect(out.map((i) => i.tripId)).toEqual(['t_p', 't_a', 't_e']);
   });
 });
