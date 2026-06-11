@@ -4,7 +4,9 @@ Tracks what the Admin app needs from BE (the contract owner) and what has
 landed. Until an endpoint is live, the matching data accessor in
 `src/lib/data/index.ts` falls back to the local stub layer via `notWiredYet`.
 
-- **Target version:** `@alkazat/contracts@0.2.0`
+- **Target version:** `@alkazat/contracts@0.5.0` (published by BE; supersedes
+  the original v0.2 proposal - the live surface must be reconciled against the
+  published package, since it may differ from the v0.2 request)
 - **Published version Admin is pinned to:** none yet (using local stand-ins in
   `src/lib/contracts/types.ts`)
 - **Spec source:** `docs/be-contract-proposal-admin-v0.2.md`
@@ -42,7 +44,7 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 
 | Item                                                         | Status                                      |
 | ------------------------------------------------------------ | ------------------------------------------- |
-| Publish `@alkazat/contracts@0.2.0` (types + `openapi.yaml`)  | Outstanding                                 |
+| Publish `@alkazat/contracts` (types + `openapi.yaml`)        | Published at 0.5.0 (reconcile surface)      |
 | Auth claim shape: `role` location in JWT + AAL level for MFA | Outstanding (blocks `getAdminSession()`)    |
 | Canonical audit sink (endpoint or table)                     | Outstanding (Admin records locally for now) |
 | `/admin/*` requires `role=admin` + AAL2; audited writes      | Outstanding (BE-enforced)                   |
@@ -50,7 +52,7 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 
 ## Wiring procedure (per endpoint, once live)
 
-1. Pin `@alkazat/contracts@^0.2.0`; replace the import in
+1. Pin `@alkazat/contracts@^0.5.0`; replace the import in
    `src/lib/contracts/types.ts` with the package types and reconcile any drift.
 2. In the matching `src/lib/data/index.ts` accessor, replace the `notWiredYet`
    branch with the real call (admin Supabase client or `NEXT_PUBLIC_API_BASE`).
