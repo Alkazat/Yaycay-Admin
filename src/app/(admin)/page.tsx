@@ -32,7 +32,7 @@ export default async function DashboardPage() {
           <p style={{ margin: 0 }}>
             Sign-in is live, but the BE data API is not configured yet, so
             screens show sample data. Set <code>NEXT_PUBLIC_API_BASE</code> once
-            BE publishes the admin endpoints (@alkazat/contracts v0.2) to switch
+            BE publishes the admin endpoints (@alkazat/contracts v0.5) to switch
             to real data.
           </p>
         </Card>
