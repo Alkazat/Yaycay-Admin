@@ -112,18 +112,18 @@ export interface ProductSummary {
   priceId: string;
   name: string;
   amountUsd: number;
+  tier?: TripTier;
 }
 
-/** A purchase / entitlement row. Stripe is the source of truth; this is the
- * read view BE projects into `purchases`. */
+/** A purchase / entitlement row (contract: PurchaseSummary). Stripe is the
+ * source of truth; this is the read view from the Stripe webhook. */
 export interface Purchase {
   id: string;
-  email: string;
-  productName: string;
+  ownerEmail: string;
   priceId: string;
-  amountUsd: number;
   tier: TripTier | null;
-  purchasedAt: string;
+  amountUsd: number;
+  createdAt: string;
 }
 
 export interface CustomerSummary {
@@ -148,14 +148,27 @@ export interface AuditEntry {
   details?: string;
 }
 
-export type ReviewStatus = 'pending' | 'approved' | 'published';
+export type ReviewStatus = 'pending' | 'approved' | 'edited';
 
-/** AI-generated content awaiting the quality bar before it reaches a family. */
+/**
+ * AI-generated content awaiting the quality bar before it reaches a family
+ * (contract: ContentReviewItem). From `pending` an admin either approves it as
+ * is, or edits-then-publishes (terminal `edited`).
+ */
 export interface ReviewItem {
   tripId: string;
   destination: string;
   status: ReviewStatus;
-  promptVersion: number;
   generatedAt: string;
-  summary: string;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+}
+
+/** Daily-cap usage for a trip (contract: JobCapUsage). */
+export interface JobCapUsage {
+  tripId: string;
+  date: string;
+  used: number;
+  limit: number;
+  remaining: number;
 }
