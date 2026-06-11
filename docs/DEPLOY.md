@@ -3,7 +3,7 @@
 Yaycay Admin is a Next.js (App Router) app that deploys to **Vercel** as its own
 project, off-domain and MFA-gated. It builds and runs today on the local stub
 data layer, so it can be hosted before the BE contract lands; real data wiring
-follows once `@alkazat/contracts` v0.2 is published.
+follows once `@alkazat/contracts` (v0.5) is wired in.
 
 ## Hosting: Vercel (separate project)
 
