@@ -7,8 +7,8 @@ import { recordAudit } from '@/lib/audit';
 import type { ReviewDecision } from '@/lib/review/state';
 
 /*
- * Advance generated content through the quality bar: approve, then publish.
- * Each transition re-checks admin + MFA and is audited.
+ * Apply a review decision to generated content: approve as is, or edit then
+ * publish. Each re-checks admin + MFA and is audited.
  */
 async function decide(formData: FormData, decision: ReviewDecision) {
   const session = await requireAdmin();
@@ -31,6 +31,6 @@ export async function approveAction(formData: FormData): Promise<void> {
   await decide(formData, 'approve');
 }
 
-export async function publishAction(formData: FormData): Promise<void> {
-  await decide(formData, 'publish');
+export async function editAction(formData: FormData): Promise<void> {
+  await decide(formData, 'edit');
 }

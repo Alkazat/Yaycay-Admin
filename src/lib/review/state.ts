@@ -2,35 +2,32 @@ import type { ReviewItem, ReviewStatus } from '@/lib/contracts/types';
 
 /*
  * Pure content-review state transitions, free of Next.js / Supabase so they can
- * be unit-tested. The quality-bar flow is: pending -> approved -> published.
- * Approving content that is already published is a no-op; publishing requires
- * a prior approval.
+ * be unit-tested. Per the contract, from `pending` an admin either approves the
+ * content as is (-> `approved`) or edits then publishes it (-> `edited`). Both
+ * are terminal; a reviewed item cannot be re-decided.
  */
 
-export type ReviewDecision = 'approve' | 'publish';
+export type ReviewDecision = 'approve' | 'edit';
 
-const NEXT: Record<ReviewDecision, { from: ReviewStatus; to: ReviewStatus }> = {
-  approve: { from: 'pending', to: 'approved' },
-  publish: { from: 'approved', to: 'published' },
+const NEXT: Record<ReviewDecision, ReviewStatus> = {
+  approve: 'approved',
+  edit: 'edited',
 };
 
-export function canApply(
-  status: ReviewStatus,
-  decision: ReviewDecision,
-): boolean {
-  return NEXT[decision].from === status;
+/** A decision can only be applied to a pending item. */
+export function canApply(status: ReviewStatus): boolean {
+  return status === 'pending';
 }
 
-/** Returns a new list with the decision applied to one item, if valid. */
+/** Returns a new list with the decision applied to one pending item, if valid. */
 export function applyDecision(
   items: ReviewItem[],
   tripId: string,
   decision: ReviewDecision,
 ): ReviewItem[] {
   return items.map((item) => {
-    if (item.tripId !== tripId) return item;
-    if (!canApply(item.status, decision)) return item;
-    return { ...item, status: NEXT[decision].to };
+    if (item.tripId !== tripId || !canApply(item.status)) return item;
+    return { ...item, status: NEXT[decision] };
   });
 }
 
@@ -38,7 +35,7 @@ export function pendingFirst(items: ReviewItem[]): ReviewItem[] {
   const rank: Record<ReviewStatus, number> = {
     pending: 0,
     approved: 1,
-    published: 2,
+    edited: 2,
   };
   return [...items].sort(
     (a, b) =>

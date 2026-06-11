@@ -1,12 +1,12 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { listReviewItems } from '@/lib/data';
 import type { ReviewStatus } from '@/lib/contracts/types';
-import { approveAction, publishAction } from './actions';
+import { approveAction, editAction } from './actions';
 
 const tone: Record<ReviewStatus, 'default' | 'success' | 'alert' | 'info'> = {
   pending: 'alert',
-  approved: 'info',
-  published: 'success',
+  approved: 'success',
+  edited: 'info',
 };
 
 const buttonStyle = {
@@ -28,7 +28,7 @@ export default async function ContentReviewPage() {
     <>
       <PageHeader
         title="Content review"
-        subtitle="Approve, then publish AI-generated content before it reaches a family. Quality bar: pending to approved to published."
+        subtitle="The quality bar for AI-generated content before it reaches a family. Approve as is, or edit then publish."
       />
       {items.length === 0 ? (
         <Card>
@@ -50,35 +50,41 @@ export default async function ContentReviewPage() {
               }}
             >
               <Badge tone={tone[item.status]}>{item.status}</Badge>
-              <Badge>prompt v{item.promptVersion}</Badge>
               <span style={{ color: 'var(--muted)' }}>
                 generated {item.generatedAt}
+                {item.reviewedAt
+                  ? ` · reviewed ${item.reviewedAt} by ${item.reviewedBy ?? 'unknown'}`
+                  : ''}
               </span>
             </div>
-            <p style={{ marginTop: 0 }}>{item.summary}</p>
-            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-              {item.status === 'pending' ? (
+            {item.status === 'pending' ? (
+              <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
                 <form action={approveAction}>
                   <input type="hidden" name="tripId" value={item.tripId} />
                   <button type="submit" style={buttonStyle}>
                     Approve
                   </button>
                 </form>
-              ) : null}
-              {item.status === 'approved' ? (
-                <form action={publishAction}>
+                <form action={editAction}>
                   <input type="hidden" name="tripId" value={item.tripId} />
-                  <button type="submit" style={buttonStyle}>
-                    Publish
+                  <button
+                    type="submit"
+                    style={{
+                      ...buttonStyle,
+                      background: 'var(--surface)',
+                      color: 'var(--ink)',
+                      border: '1px solid var(--border)',
+                    }}
+                  >
+                    Edit and publish
                   </button>
                 </form>
-              ) : null}
-              {item.status === 'published' ? (
-                <span style={{ color: 'var(--success)' }}>
-                  Published to the family.
-                </span>
-              ) : null}
-            </div>
+              </div>
+            ) : (
+              <span style={{ color: 'var(--success)' }}>
+                Reviewed - {item.status}.
+              </span>
+            )}
           </Card>
         ))
       )}
