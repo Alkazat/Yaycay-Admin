@@ -1,9 +1,17 @@
 name: CI
 
+# NODE_AUTH_TOKEN + packages:read are wired so that, once @alkazat/contracts is
+# added as a dependency, `npm ci` can pull it from GitHub Packages via the
+# committed .npmrc. They are inert until the dependency is added.
+
 on:
   push:
     branches: [develop, main]
   pull_request:
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   verify:
@@ -15,6 +23,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
@@ -29,5 +39,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e

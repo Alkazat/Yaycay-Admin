@@ -41,15 +41,16 @@ Do NOT use `admin.yaycay.ai` or any `*.yaycay.ai` host. Set
 Set these per environment (Production and Preview). Source of truth is
 `.env.example`.
 
-| Variable                        | Scope  | Notes                                              |
-| ------------------------------- | ------ | -------------------------------------------------- |
-| `ADMIN_SUPABASE_URL`            | server | Admin Supabase project URL                         |
-| `ADMIN_SERVICE_ROLE_KEY`        | server | Service-role key. Server-only, never exposed       |
-| `NEXT_PUBLIC_SUPABASE_URL`      | public | Browser auth client                                |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Browser auth client                                |
-| `NEXT_PUBLIC_API_BASE`          | public | BE `/admin/*` base URL                             |
-| `NEXT_PUBLIC_SITE_URL`          | public | The off-domain admin URL                           |
-| `ADMIN_DEV_BYPASS`              | server | MUST be unset or `false` in staging and production |
+| Variable                        | Scope  | Notes                                                                                                                                                                  |
+| ------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ADMIN_SUPABASE_URL`            | server | Admin Supabase project URL                                                                                                                                             |
+| `ADMIN_SERVICE_ROLE_KEY`        | server | Service-role key. Server-only, never exposed                                                                                                                           |
+| `NEXT_PUBLIC_SUPABASE_URL`      | public | Browser auth client                                                                                                                                                    |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Browser auth client                                                                                                                                                    |
+| `NEXT_PUBLIC_API_BASE`          | public | BE `/admin/*` base URL. Set this to switch the screens from sample data to live data (e.g. `https://staging.api.yaycay.ai`, then `https://api.yaycay.ai`).             |
+| `NEXT_PUBLIC_SITE_URL`          | public | The off-domain admin URL                                                                                                                                               |
+| `ADMIN_DEV_BYPASS`              | server | MUST be unset or `false` in staging and production                                                                                                                     |
+| `NODE_AUTH_TOKEN`               | build  | Only if installing `@alkazat/contracts` (private GitHub Packages). A token with `read:packages`; used by the committed `.npmrc` at install time. Not needed otherwise. |
 
 When the Supabase/BE values are absent the app serves stub data and (with
 `ADMIN_DEV_BYPASS=true`) a stub admin session. Both are for local development
