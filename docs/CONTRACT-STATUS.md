@@ -34,8 +34,8 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 | 8   | (cap usage)               | `GET /admin/jobs/cap?tripId=`                 | Jobs           | Outstanding (computed client-side for now) |
 | 9   | `listTrips`               | `GET /admin/trips?query=`                     | Trips          | Outstanding                                |
 | 10  | `getTripContent`          | `GET /admin/trips/{id}/content`               | Trips          | Outstanding                                |
-| 11  | (profiles)                | `GET /admin/trips/{id}/profiles`              | Trips          | Outstanding (UI not built)                 |
-| 12  | (progress)                | `GET /admin/trips/{id}/progress`              | Trips          | Outstanding (UI not built)                 |
+| 11  | `listTripProfiles`        | `GET /admin/trips/{id}/profiles`              | Trips          | Wired (client); shown in trip inspector    |
+| 12  | `listTripProgress`        | `GET /admin/trips/{id}/progress`              | Trips          | Wired (client); shown in trip inspector    |
 | 13  | `listCustomers`           | `GET /admin/customers?query=`                 | Customers      | Outstanding                                |
 | 14  | `requestCustomerDeletion` | `POST /admin/customers/{id}/deletion-request` | Customers      | Outstanding                                |
 | 15  | `listReviewItems`         | `GET /admin/content-review`                   | Content review | Outstanding                                |
@@ -62,11 +62,19 @@ additions on BE. These are additive: the admin Trips inspector and Content
 review ignore unknown fields, so nothing breaks. Track these so the inspector
 can surface them once they land in the admin contract.
 
-| Item               | What                                                                                                                                                                                   | Admin action (when the contract carries it)                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Content fields     | `variants.standard`, `activity.challenge` (typed + answer), `activity.facts[]`, `day.did_you_know`, `day.weather`, `day.hotel`/move, `day.game`, `day.star_challenge`, `location.zoom` | Enrich the Trip inspector to render these, so an admin sees what a family sees                                                |
-| ChildProfile flags | medical / dietary flags on `ChildProfile` (not yet on `AdminChildProfile`)                                                                                                             | Surface in the admin profiles view for safety troubleshooting                                                                 |
-| Reward / progress  | stars, packing, journal, progress detail                                                                                                                                               | If ops needs to troubleshoot these, request the matching `/admin/*` reads on BE (`/admin/trips/{id}/progress` already exists) |
+| Item               | What                                                                                                                                                                                   | Admin status                                                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Content fields     | `variants.standard`, `activity.challenge` (typed + answer), `activity.facts[]`, `day.did_you_know`, `day.weather`, `day.hotel`/move, `day.game`, `day.star_challenge`, `location.zoom` | DONE - the trip inspector renders these (additive local types; auto-light up when BE adds them to `/admin/trips/{id}/content`) |
+| ChildProfile flags | medical / dietary flags on `ChildProfile`                                                                                                                                              | UI DONE - profiles view surfaces dietary/medical as alert badges. Pending BE: add the flags to `AdminChildProfile`             |
+| Reward / progress  | progress, stars, packing, journal                                                                                                                                                      | Progress DONE (inspector). Stars/packing/journal need new `/admin/*` reads - raised on BE below                                |
+
+### Requests raised on BE (for a future contract version)
+
+1. Add `dietary: string[]` and `medical: string[]` to `AdminChildProfile` (the
+   admin profiles view already renders them; they are stubbed locally for now).
+2. Add admin-scoped reads for the reward economy if ops needs to troubleshoot
+   it: `GET /admin/trips/{id}/stars`, `/packing`, `/journal`. (Progress already
+   exists at `/admin/trips/{id}/progress`.)
 
 ## Wiring procedure (per endpoint, once live)
 

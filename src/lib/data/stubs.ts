@@ -1,5 +1,7 @@
 import type {
+  AdminProgress,
   AiJob,
+  ChildProfile,
   CustomerSummary,
   ModelRoute,
   ProductSummary,
@@ -116,21 +118,96 @@ export const stubTripContent: Record<string, TripContent> = {
         date: '2026-06-26',
         label: 'Arrival',
         summary: 'Settle in and hit the beach.',
+        did_you_know:
+          'Singapore has more than 300 parks and 4 nature reserves.',
+        weather: {
+          summary: 'Hot and humid, afternoon storm',
+          high_c: 32,
+          low_c: 26,
+        },
+        hotel: { name: 'Village Hotel Sentosa', move: true },
+        game: { kind: 'spot-it', title: 'Spot 5 sea creatures' },
+        star_challenge: {
+          title: 'Build a sandcastle taller than your bucket',
+          stars: 3,
+        },
         moments: [
           {
             id: 'm_1',
             slot: 'afternoon',
             title: 'Sentosa beaches',
             time_hint: '15:00',
+            location: {
+              name: 'Siloso Beach',
+              lat: 1.255,
+              lng: 103.81,
+              zoom: 15,
+            },
             activities: [
-              { id: 'a_1', kind: 'kid', title: 'Beach treasure hunt' },
-              { id: 'a_2', kind: 'adult', title: 'Sunset drinks' },
+              {
+                id: 'a_1',
+                kind: 'kid',
+                title: 'Beach treasure hunt',
+                body: 'Hunt for shells and clues along the sand.',
+                facts: [
+                  'Siloso Beach is man-made, built with sand from nearby islands.',
+                ],
+                challenge: {
+                  type: 'quiz',
+                  prompt: 'How many legs does a crab have?',
+                  answer: '10 (eight legs and two claws)',
+                },
+                variants: {
+                  little: { body: 'Find three pretty shells with a grown-up.' },
+                  explorer_plus: {
+                    fact: 'Crabs breathe through gills, even on land.',
+                  },
+                },
+              },
+              {
+                id: 'a_2',
+                kind: 'adult',
+                title: 'Sunset drinks',
+                booking: { name: 'Ola Beach Club', time: '18:30' },
+                safety: {
+                  note: 'Lenny: anaphylactic to nuts/legumes - confirm with kitchen.',
+                  flags: ['nuts', 'legumes'],
+                },
+              },
             ],
           },
         ],
       },
     ],
   },
+};
+
+export const stubProfiles: Record<string, ChildProfile[]> = {
+  t_123: [
+    {
+      id: 'cp_1',
+      name: 'Lenny',
+      age: 6,
+      mode: 'explorer',
+      interests: ['dinosaurs', 'swimming'],
+      dietary: ['nut-free', 'legume-free'],
+      medical: ['anaphylaxis (EpiPen)'],
+    },
+    {
+      id: 'cp_2',
+      name: 'Mia',
+      age: 9,
+      mode: 'explorer_plus',
+      interests: ['art', 'animals'],
+    },
+  ],
+};
+
+export const stubProgress: Record<string, AdminProgress[]> = {
+  t_123: [
+    { profileId: 'cp_1', activeMode: 'explorer', doneItems: ['a_1'] },
+    { profileId: 'cp_2', activeMode: 'explorer_plus', doneItems: [] },
+  ],
 };
 
 export const stubProducts: ProductSummary[] = [
