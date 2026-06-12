@@ -25,7 +25,7 @@ An internal ops console to (1) **improve** the live experience - edit and versio
 
 - TypeScript, **Next.js** (or **Refine** for fast CRUD screens), on **Vercel** (separate project + off-domain).
 - Design system (admin can be denser, but same tokens/components/fonts).
-- `@yaycay/contracts` (admin DTOs); Supabase admin client against the same DB.
+- `@alkazat/contracts` (admin DTOs); Supabase admin client against the same DB.
 
 ## Screens
 
