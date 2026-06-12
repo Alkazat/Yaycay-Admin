@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { listReviewItems } from '@/lib/data';
 import type { ReviewStatus } from '@/lib/contracts/types';
-import { approveAction, editAction } from './actions';
+import { approveAction } from './actions';
 
 const tone: Record<ReviewStatus, 'default' | 'success' | 'alert' | 'info'> = {
   pending: 'alert',
@@ -65,20 +66,20 @@ export default async function ContentReviewPage() {
                     Approve
                   </button>
                 </form>
-                <form action={editAction}>
-                  <input type="hidden" name="tripId" value={item.tripId} />
-                  <button
-                    type="submit"
-                    style={{
-                      ...buttonStyle,
-                      background: 'var(--surface)',
-                      color: 'var(--ink)',
-                      border: '1px solid var(--border)',
-                    }}
-                  >
-                    Edit and publish
-                  </button>
-                </form>
+                <Link
+                  href={`/content-review/${item.tripId}/edit`}
+                  style={{
+                    ...buttonStyle,
+                    background: 'var(--surface)',
+                    color: 'var(--ink)',
+                    border: '1px solid var(--border)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Edit and publish
+                </Link>
               </div>
             ) : (
               <span style={{ color: 'var(--success)' }}>

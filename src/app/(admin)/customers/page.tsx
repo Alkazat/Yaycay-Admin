@@ -1,61 +1,113 @@
+import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
-import { listCustomers } from '@/lib/data';
+import { searchCustomers } from '@/lib/data';
 import { deletionRequestAction } from './actions';
 
-export default async function CustomersPage() {
-  const customers = await listCustomers();
+const inputStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 'var(--tap-min)',
+  padding: '0 var(--space-3)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--surface)',
+};
+
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; cursor?: string }>;
+}) {
+  const { q, cursor } = await searchParams;
+  const { items, nextCursor } = await searchCustomers({ query: q, cursor });
+
+  const nextHref = nextCursor
+    ? `/customers?${new URLSearchParams({ ...(q ? { q } : {}), cursor: nextCursor })}`
+    : null;
+
   return (
     <>
       <PageHeader
         title="Customers"
         subtitle="Account lookup, entitlement, retention status and data-deletion requests."
       />
-      {customers.map((c) => (
-        <Card key={c.userId} title={c.email}>
-          <div
+      <Card>
+        <form method="get" style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <input
+            name="q"
+            defaultValue={q ?? ''}
+            placeholder="email"
+            style={inputStyle}
+          />
+          <button
+            type="submit"
             style={{
-              display: 'flex',
-              gap: 'var(--space-2)',
-              alignItems: 'center',
-              flexWrap: 'wrap',
+              minHeight: 'var(--tap-min)',
+              padding: '0 var(--space-4)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--surface)',
+              cursor: 'pointer',
             }}
           >
-            {c.tier ? (
-              <Badge tone="info">{c.tier}</Badge>
-            ) : (
-              <Badge>no tier</Badge>
-            )}
-            <span style={{ color: 'var(--muted)' }}>
-              retention: {c.retentionExpiresAt ?? 'disposal by default'}
-            </span>
-            {c.deletionRequested ? (
-              <Badge tone="alert">deletion requested</Badge>
-            ) : (
-              <form
-                action={deletionRequestAction}
-                style={{ marginLeft: 'auto' }}
-              >
-                <input type="hidden" name="userId" value={c.userId} />
-                <button
-                  type="submit"
-                  style={{
-                    minHeight: 'var(--tap-min)',
-                    padding: '0 var(--space-4)',
-                    border: '1px solid var(--alert)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--surface)',
-                    color: 'var(--alert)',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Request deletion
-                </button>
-              </form>
-            )}
-          </div>
+            Search
+          </button>
+        </form>
+      </Card>
+
+      {items.length === 0 ? (
+        <Card>
+          <p style={{ margin: 0 }}>No customers match.</p>
         </Card>
-      ))}
+      ) : (
+        items.map((c) => (
+          <Card key={c.userId} title={c.email}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--space-2)',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              {c.tier ? (
+                <Badge tone="info">{c.tier}</Badge>
+              ) : (
+                <Badge>no tier</Badge>
+              )}
+              <span style={{ color: 'var(--muted)' }}>
+                retention: {c.retentionExpiresAt ?? 'disposal by default'}
+              </span>
+              {c.deletionRequested ? (
+                <Badge tone="alert">deletion requested</Badge>
+              ) : (
+                <form
+                  action={deletionRequestAction}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  <input type="hidden" name="userId" value={c.userId} />
+                  <button
+                    type="submit"
+                    style={{
+                      minHeight: 'var(--tap-min)',
+                      padding: '0 var(--space-4)',
+                      border: '1px solid var(--alert)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--surface)',
+                      color: 'var(--alert)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Request deletion
+                  </button>
+                </form>
+              )}
+            </div>
+          </Card>
+        ))
+      )}
+
+      {nextHref ? <Link href={nextHref}>Next page -&gt;</Link> : null}
     </>
   );
 }
