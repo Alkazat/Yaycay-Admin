@@ -9,7 +9,7 @@ import type {
   Purchase,
   ReviewItem,
   TripContent,
-  TripSummary,
+  AdminTripSummary,
 } from '@/lib/contracts/types';
 
 /*
@@ -79,7 +79,7 @@ export const stubJobs: AiJob[] = [
   },
 ];
 
-export const stubTrips: TripSummary[] = [
+export const stubTrips: AdminTripSummary[] = [
   {
     id: 't_123',
     destination: 'Singapore',
