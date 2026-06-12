@@ -55,6 +55,19 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 | `/admin/*` requires `role=admin` + AAL2; audited writes      | Outstanding (BE-enforced)                   |
 | problem+json errors; cursor pagination `?cursor=&limit=`     | Outstanding (convention)                    |
 
+## Incoming from FE (additive; not blocking Admin)
+
+The FE roadmap (`05-FE-ROADMAP.md`, section D) raises content-model and endpoint
+additions on BE. These are additive: the admin Trips inspector and Content
+review ignore unknown fields, so nothing breaks. Track these so the inspector
+can surface them once they land in the admin contract.
+
+| Item               | What                                                                                                                                                                                   | Admin action (when the contract carries it)                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Content fields     | `variants.standard`, `activity.challenge` (typed + answer), `activity.facts[]`, `day.did_you_know`, `day.weather`, `day.hotel`/move, `day.game`, `day.star_challenge`, `location.zoom` | Enrich the Trip inspector to render these, so an admin sees what a family sees                                                |
+| ChildProfile flags | medical / dietary flags on `ChildProfile` (not yet on `AdminChildProfile`)                                                                                                             | Surface in the admin profiles view for safety troubleshooting                                                                 |
+| Reward / progress  | stars, packing, journal, progress detail                                                                                                                                               | If ops needs to troubleshoot these, request the matching `/admin/*` reads on BE (`/admin/trips/{id}/progress` already exists) |
+
 ## Wiring procedure (per endpoint, once live)
 
 1. Pin `@alkazat/contracts@^0.5.0`; replace the import in
