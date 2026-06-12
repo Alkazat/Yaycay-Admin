@@ -53,7 +53,7 @@ export interface AiJob {
   error?: string;
 }
 
-export interface TripSummary {
+export interface AdminTripSummary {
   id: string;
   destination: string;
   ownerEmail: string;

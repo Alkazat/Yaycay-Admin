@@ -12,7 +12,7 @@ import type {
   Purchase,
   ReviewItem,
   TripContent,
-  TripSummary,
+  AdminTripSummary,
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 import { devStore } from '@/lib/data/store';
@@ -121,9 +121,9 @@ export async function retryJob(id: string): Promise<AiJob | null> {
   return adminApi.post<AiJob>(`/admin/jobs/${id}/retry`);
 }
 
-export async function listTrips(): Promise<TripSummary[]> {
+export async function listTrips(): Promise<AdminTripSummary[]> {
   if (!isAdminDataLive()) return stubs.stubTrips;
-  const page = await adminApi.get<Page<TripSummary>>('/admin/trips');
+  const page = await adminApi.get<Page<AdminTripSummary>>('/admin/trips');
   return page.items;
 }
 
@@ -143,7 +143,7 @@ function buildQuery(opts: SearchOpts): string {
 /** Search trips by destination / owner email / id (GET /admin/trips?query=&cursor=). */
 export async function searchTrips(
   opts: SearchOpts = {},
-): Promise<Page<TripSummary>> {
+): Promise<Page<AdminTripSummary>> {
   if (!isAdminDataLive()) {
     const q = (opts.query ?? '').toLowerCase().trim();
     const items = stubs.stubTrips.filter(
@@ -155,7 +155,7 @@ export async function searchTrips(
     );
     return { items, nextCursor: null };
   }
-  return adminApi.get<Page<TripSummary>>(`/admin/trips${buildQuery(opts)}`);
+  return adminApi.get<Page<AdminTripSummary>>(`/admin/trips${buildQuery(opts)}`);
 }
 
 export async function getTripContent(
