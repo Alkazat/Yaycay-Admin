@@ -1,7 +1,9 @@
 import 'server-only';
 import { isAdminDataLive } from '@/lib/config';
 import type {
+  AdminProgress,
   AiJob,
+  ChildProfile,
   CustomerSummary,
   ModelRoute,
   ProductSummary,
@@ -118,6 +120,28 @@ export async function getTripContent(
   } catch {
     return null;
   }
+}
+
+/** Child profiles for a trip (GET /admin/trips/{id}/profiles). */
+export async function listTripProfiles(
+  tripId: string,
+): Promise<ChildProfile[]> {
+  if (!isAdminDataLive()) return stubs.stubProfiles[tripId] ?? [];
+  const res = await adminApi.get<{ items: ChildProfile[] }>(
+    `/admin/trips/${tripId}/profiles`,
+  );
+  return res.items;
+}
+
+/** Per-profile progress for a trip (GET /admin/trips/{id}/progress). */
+export async function listTripProgress(
+  tripId: string,
+): Promise<AdminProgress[]> {
+  if (!isAdminDataLive()) return stubs.stubProgress[tripId] ?? [];
+  const res = await adminApi.get<{ items: AdminProgress[] }>(
+    `/admin/trips/${tripId}/progress`,
+  );
+  return res.items;
 }
 
 export async function listProducts(): Promise<ProductSummary[]> {

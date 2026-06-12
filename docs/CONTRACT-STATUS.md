@@ -34,8 +34,8 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 | 8   | (cap usage)               | `GET /admin/jobs/cap?tripId=`                 | Jobs           | Outstanding (computed client-side for now) |
 | 9   | `listTrips`               | `GET /admin/trips?query=`                     | Trips          | Outstanding                                |
 | 10  | `getTripContent`          | `GET /admin/trips/{id}/content`               | Trips          | Outstanding                                |
-| 11  | (profiles)                | `GET /admin/trips/{id}/profiles`              | Trips          | Outstanding (UI not built)                 |
-| 12  | (progress)                | `GET /admin/trips/{id}/progress`              | Trips          | Outstanding (UI not built)                 |
+| 11  | `listTripProfiles`        | `GET /admin/trips/{id}/profiles`              | Trips          | Wired (client); shown in trip inspector    |
+| 12  | `listTripProgress`        | `GET /admin/trips/{id}/progress`              | Trips          | Wired (client); shown in trip inspector    |
 | 13  | `listCustomers`           | `GET /admin/customers?query=`                 | Customers      | Outstanding                                |
 | 14  | `requestCustomerDeletion` | `POST /admin/customers/{id}/deletion-request` | Customers      | Outstanding                                |
 | 15  | `listReviewItems`         | `GET /admin/content-review`                   | Content review | Outstanding                                |
@@ -54,6 +54,27 @@ Update the Status column as BE delivers. When an endpoint goes live, swap the
 | Canonical audit sink (endpoint or table)                     | Outstanding (Admin records locally for now) |
 | `/admin/*` requires `role=admin` + AAL2; audited writes      | Outstanding (BE-enforced)                   |
 | problem+json errors; cursor pagination `?cursor=&limit=`     | Outstanding (convention)                    |
+
+## Incoming from FE (additive; not blocking Admin)
+
+The FE roadmap (`05-FE-ROADMAP.md`, section D) raises content-model and endpoint
+additions on BE. These are additive: the admin Trips inspector and Content
+review ignore unknown fields, so nothing breaks. Track these so the inspector
+can surface them once they land in the admin contract.
+
+| Item               | What                                                                                                                                                                                   | Admin status                                                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Content fields     | `variants.standard`, `activity.challenge` (typed + answer), `activity.facts[]`, `day.did_you_know`, `day.weather`, `day.hotel`/move, `day.game`, `day.star_challenge`, `location.zoom` | DONE - the trip inspector renders these (additive local types; auto-light up when BE adds them to `/admin/trips/{id}/content`) |
+| ChildProfile flags | medical / dietary flags on `ChildProfile`                                                                                                                                              | UI DONE - profiles view surfaces dietary/medical as alert badges. Pending BE: add the flags to `AdminChildProfile`             |
+| Reward / progress  | progress, stars, packing, journal                                                                                                                                                      | Progress DONE (inspector). Stars/packing/journal need new `/admin/*` reads - raised on BE below                                |
+
+### Requests raised on BE (for a future contract version)
+
+1. Add `dietary: string[]` and `medical: string[]` to `AdminChildProfile` (the
+   admin profiles view already renders them; they are stubbed locally for now).
+2. Add admin-scoped reads for the reward economy if ops needs to troubleshoot
+   it: `GET /admin/trips/{id}/stars`, `/packing`, `/journal`. (Progress already
+   exists at `/admin/trips/{id}/progress`.)
 
 ## Wiring procedure (per endpoint, once live)
 
