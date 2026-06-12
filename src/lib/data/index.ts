@@ -3,6 +3,7 @@ import { isAdminDataLive } from '@/lib/config';
 import type {
   AdminProgress,
   AiJob,
+  AiModel,
   ChildProfile,
   CustomerSummary,
   ModelRoute,
@@ -81,6 +82,21 @@ export async function listModelRoutes(): Promise<ModelRoute[]> {
   return res.items;
 }
 
+/** Set the default model / override for a task (PUT /admin/model-routes/{task}). */
+export async function setModelRoute(
+  task: string,
+  defaultModel: AiModel,
+  override?: AiModel,
+): Promise<ModelRoute> {
+  if (!isAdminDataLive()) {
+    return devStore.setModelRoute({ task, defaultModel, override });
+  }
+  return adminApi.put<ModelRoute>(
+    `/admin/model-routes/${encodeURIComponent(task)}`,
+    { defaultModel, override: override ?? null },
+  );
+}
+
 export async function listJobs(): Promise<AiJob[]> {
   if (!isAdminDataLive()) return devStore.getJobs();
   const page = await adminApi.get<Page<AiJob>>('/admin/jobs');
@@ -109,6 +125,37 @@ export async function listTrips(): Promise<TripSummary[]> {
   if (!isAdminDataLive()) return stubs.stubTrips;
   const page = await adminApi.get<Page<TripSummary>>('/admin/trips');
   return page.items;
+}
+
+export interface SearchOpts {
+  query?: string;
+  cursor?: string;
+}
+
+function buildQuery(opts: SearchOpts): string {
+  const params = new URLSearchParams();
+  if (opts.query) params.set('query', opts.query);
+  if (opts.cursor) params.set('cursor', opts.cursor);
+  const s = params.toString();
+  return s ? `?${s}` : '';
+}
+
+/** Search trips by destination / owner email / id (GET /admin/trips?query=&cursor=). */
+export async function searchTrips(
+  opts: SearchOpts = {},
+): Promise<Page<TripSummary>> {
+  if (!isAdminDataLive()) {
+    const q = (opts.query ?? '').toLowerCase().trim();
+    const items = stubs.stubTrips.filter(
+      (t) =>
+        !q ||
+        t.destination.toLowerCase().includes(q) ||
+        t.ownerEmail.toLowerCase().includes(q) ||
+        t.id.toLowerCase().includes(q),
+    );
+    return { items, nextCursor: null };
+  }
+  return adminApi.get<Page<TripSummary>>(`/admin/trips${buildQuery(opts)}`);
 }
 
 export async function getTripContent(
@@ -164,6 +211,22 @@ export async function listCustomers(): Promise<CustomerSummary[]> {
   return page.items;
 }
 
+/** Search customers by email (GET /admin/customers?query=&cursor=). */
+export async function searchCustomers(
+  opts: SearchOpts = {},
+): Promise<Page<CustomerSummary>> {
+  if (!isAdminDataLive()) {
+    const q = (opts.query ?? '').toLowerCase().trim();
+    const items = devStore
+      .getCustomers()
+      .filter((c) => !q || c.email.toLowerCase().includes(q));
+    return { items, nextCursor: null };
+  }
+  return adminApi.get<Page<CustomerSummary>>(
+    `/admin/customers${buildQuery(opts)}`,
+  );
+}
+
 /** Record a data-deletion request (POST /admin/customers/{id}/deletion-request). */
 export async function requestCustomerDeletion(
   userId: string,
@@ -211,6 +274,25 @@ export async function decideReview(
   const content = await adminApi.get<TripContent>(
     `/admin/trips/${tripId}/content`,
   );
+  return adminApi.post<ReviewItem>(
+    `/admin/content-review/${tripId}/edit`,
+    content,
+  );
+}
+
+/**
+ * Publish edited content (POST /admin/content-review/{tripId}/edit with the
+ * edited TripContent). In stub mode the edit is persisted to the dev content
+ * map and the item is marked `edited`.
+ */
+export async function publishEditedContent(
+  tripId: string,
+  content: TripContent,
+): Promise<ReviewItem | null> {
+  if (!isAdminDataLive()) {
+    stubs.stubTripContent[tripId] = content;
+    return devStore.setReviewStatus(tripId, 'edited') ?? null;
+  }
   return adminApi.post<ReviewItem>(
     `/admin/content-review/${tripId}/edit`,
     content,
