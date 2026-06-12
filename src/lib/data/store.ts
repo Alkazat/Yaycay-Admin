@@ -39,6 +39,16 @@ export const devStore = {
   getModelRoutes(): ModelRoute[] {
     return modelRoutes.map((r) => ({ ...r }));
   },
+  setModelRoute(route: ModelRoute): ModelRoute {
+    const existing = modelRoutes.find((r) => r.task === route.task);
+    if (existing) {
+      existing.defaultModel = route.defaultModel;
+      existing.override = route.override;
+    } else {
+      modelRoutes.push({ ...route });
+    }
+    return { ...route };
+  },
   getJobs(): AiJob[] {
     return jobs.map((j) => ({ ...j }));
   },
