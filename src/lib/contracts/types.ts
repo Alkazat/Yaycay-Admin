@@ -67,8 +67,19 @@ export interface TripSummary {
 export interface ChildProfile {
   id: string;
   name: string;
-  age: number;
+  age?: number;
+  mode?: 'little' | 'standard' | 'explorer' | 'explorer_plus';
   interests: string[];
+  /** Additive (FE roadmap section D): safety flags surfaced to admins. */
+  dietary?: string[];
+  medical?: string[];
+}
+
+/** Per-profile progress (contract: AdminProgress). */
+export interface AdminProgress {
+  profileId: string | null;
+  activeMode: string | null;
+  doneItems: string[];
 }
 
 /** The canonical content model (model context section 5), trimmed to admin needs. */
@@ -91,6 +102,34 @@ export interface TripDay {
   label: string;
   summary?: string;
   moments: TripMoment[];
+  /** Additive content enrichment (FE roadmap section D). */
+  did_you_know?: string;
+  weather?: Weather;
+  hotel?: DayHotel;
+  game?: DayGame;
+  star_challenge?: StarChallenge;
+}
+
+export interface Weather {
+  summary: string;
+  high_c?: number;
+  low_c?: number;
+}
+
+export interface DayHotel {
+  name: string;
+  /** True when the family changes accommodation on this day. */
+  move?: boolean;
+}
+
+export interface DayGame {
+  kind: string;
+  title: string;
+}
+
+export interface StarChallenge {
+  title: string;
+  stars: number;
 }
 
 export interface TripMoment {
@@ -98,7 +137,15 @@ export interface TripMoment {
   slot: string;
   title: string;
   time_hint?: string;
+  location?: Location;
   activities: TripActivity[];
+}
+
+export interface Location {
+  name: string;
+  lat?: number;
+  lng?: number;
+  zoom?: number;
 }
 
 export interface TripActivity {
@@ -106,6 +153,30 @@ export interface TripActivity {
   kind: ActivityKind;
   title: string;
   body?: string;
+  /** Additive content enrichment (FE roadmap section D). */
+  facts?: string[];
+  challenge?: Challenge;
+  variants?: Variants;
+  safety?: { note?: string; flags?: string[] };
+  booking?: { name: string; time?: string };
+}
+
+export interface Challenge {
+  type: 'quiz' | 'spot' | 'photo' | 'challenge';
+  prompt: string;
+  answer?: string;
+}
+
+export interface Variants {
+  standard?: VariantBlock;
+  little?: VariantBlock;
+  explorer?: VariantBlock;
+  explorer_plus?: VariantBlock;
+}
+
+export interface VariantBlock {
+  body?: string;
+  fact?: string;
 }
 
 export interface ProductSummary {
