@@ -1,69 +1,54 @@
 /*
- * Local stub of the admin-scoped DTOs from @alkazat/contracts.
+ * @alkazat/contracts adoption barrel for the Admin app.
  *
- * BE owns the real contract; the Admin app consumes it as a pinned package.
- * Until that package is published and wired in, these types mirror the model
- * context (sections 4, 5, 7) so screens can be typed against a stable shape.
+ * BE owns the contract; Admin now consumes it as a pinned package
+ * (@alkazat/contracts@^0.8.0). The admin-scoped and shared DTOs that match the
+ * published shapes are re-exported straight from the package below, so there is
+ * one source of truth.
  *
- * Golden rule (model context section 3): never read a field that is not in
- * the contract. When the real package lands, replace this import surface with
- * `import type { ... } from '@alkazat/contracts'` and reconcile any drift.
+ * The remaining declarations are kept local on purpose: Admin's shapes here
+ * genuinely diverge from contract v0.8, so re-exporting the published versions
+ * would not type-check. Each retained block notes why; reconciling the drift is
+ * a BE contract change (model context section 3), not a local invention.
  */
 
-export type Role = 'user' | 'admin';
-export type TripTier = 'free' | 'byo' | 'ours';
-export type AiModel = 'claude-sonnet' | 'claude-opus' | 'gemini' | 'openai';
-export type AiJobKind = 'generation' | 'ingestion' | 'chat';
-export type AiJobStatus = 'queued' | 'running' | 'succeeded' | 'failed';
-export type ActivityKind = 'kid' | 'shared' | 'adult';
+import type { ActivityKind, TripTier, Variants } from '@alkazat/contracts';
 
-export interface AdminSession {
-  userId: string;
-  email: string;
-  role: Role;
-  mfaVerified: boolean;
-}
+// ---------------------------------------------------------------------------
+// Re-exported verbatim from the published contract (drop-in matches).
+// ---------------------------------------------------------------------------
+export type {
+  Role,
+  TripTier,
+  AiModel,
+  AiJobKind,
+  AiJobStatus,
+  ActivityKind,
+  AdminSession,
+  Prompt,
+  ModelRoute,
+  AiJob,
+  AdminTripSummary,
+  AuditEntry,
+  CustomerSummary,
+  JobCapUsage,
+  Variants,
+  VariantBlock,
+  // Names the Admin app uses that the contract publishes under a different name.
+  ContentReviewItem as ReviewItem,
+  ContentReviewStatus as ReviewStatus,
+  PurchaseSummary as Purchase,
+} from '@alkazat/contracts';
 
-export interface Prompt {
-  id: string;
-  task: string; // e.g. "trip.generate", "ingest.reservation"
-  title: string;
-  body: string;
-  model: AiModel;
-  version: number;
-  active: boolean;
-  updatedAt: string;
-  updatedBy: string;
-}
+// ---------------------------------------------------------------------------
+// Retained locally: Admin diverges from contract v0.8.
+// ---------------------------------------------------------------------------
 
-export interface ModelRoute {
-  task: string;
-  defaultModel: AiModel;
-  override?: AiModel;
-}
-
-export interface AiJob {
-  id: string;
-  tripId: string;
-  kind: AiJobKind;
-  status: AiJobStatus;
-  model: AiModel;
-  promptVersion: number;
-  createdAt: string;
-  error?: string;
-}
-
-export interface AdminTripSummary {
-  id: string;
-  destination: string;
-  ownerEmail: string;
-  tier: TripTier;
-  status: string;
-  startDate: string;
-  endDate: string;
-  retentionExpiresAt: string | null;
-}
-
+/**
+ * Admin's child-profile view carries an explorer `mode`, `dietary` flags and an
+ * optional `age` that the published `ChildProfile` (age required, no mode) does
+ * not. Kept local until the contract gains the admin-inspection fields.
+ */
 export interface ChildProfile {
   id: string;
   name: string;
@@ -75,14 +60,35 @@ export interface ChildProfile {
   medical?: string[];
 }
 
-/** Per-profile progress (contract: AdminProgress). */
+/** Per-profile progress (contract: AdminProgress). Not yet in the package. */
 export interface AdminProgress {
   profileId: string | null;
   activeMode: string | null;
   doneItems: string[];
 }
 
-/** The canonical content model (model context section 5), trimmed to admin needs. */
+/**
+ * The catalogue row as the Admin console lists it. The published
+ * `ProductSummary` additionally requires `kind` and `active`; Admin reads only
+ * the trimmed set here, so it stays local until those are surfaced in the UI.
+ */
+export interface ProductSummary {
+  priceId: string;
+  name: string;
+  amountUsd: number;
+  tier?: TripTier;
+}
+
+/* --------------------------------------------------------------------------
+ * Content model (model context section 5), trimmed to admin needs.
+ *
+ * Admin renders a simplified view of the trip content: weather as
+ * `{ summary, high_c, low_c }`, a hotel `move` flag, a `{ title, stars }` star
+ * challenge. The published content model (`Day`/`Weather`/`Hotel`/...) carries
+ * different shapes, so these stay local; full adoption is a BE-side
+ * reconciliation tracked separately.
+ * ------------------------------------------------------------------------ */
+
 export interface TripContent {
   trip: {
     id: string;
@@ -165,81 +171,4 @@ export interface Challenge {
   type: 'quiz' | 'spot' | 'photo' | 'challenge';
   prompt: string;
   answer?: string;
-}
-
-export interface Variants {
-  standard?: VariantBlock;
-  little?: VariantBlock;
-  explorer?: VariantBlock;
-  explorer_plus?: VariantBlock;
-}
-
-export interface VariantBlock {
-  body?: string;
-  fact?: string;
-}
-
-export interface ProductSummary {
-  priceId: string;
-  name: string;
-  amountUsd: number;
-  tier?: TripTier;
-}
-
-/** A purchase / entitlement row (contract: PurchaseSummary). Stripe is the
- * source of truth; this is the read view from the Stripe webhook. */
-export interface Purchase {
-  id: string;
-  ownerEmail: string;
-  priceId: string;
-  tier: TripTier | null;
-  amountUsd: number;
-  createdAt: string;
-}
-
-export interface CustomerSummary {
-  userId: string;
-  email: string;
-  tier: TripTier | null;
-  retentionExpiresAt: string | null;
-  deletionRequested: boolean;
-}
-
-/**
- * Audit record for an admin action. The security posture requires every
- * /admin/* write to be audited (actor, action, target, when). BE owns the
- * canonical audit store; Admin records and displays it.
- */
-export interface AuditEntry {
-  id: string;
-  actor: string;
-  action: string;
-  target: string;
-  at: string;
-  details?: string;
-}
-
-export type ReviewStatus = 'pending' | 'approved' | 'edited';
-
-/**
- * AI-generated content awaiting the quality bar before it reaches a family
- * (contract: ContentReviewItem). From `pending` an admin either approves it as
- * is, or edits-then-publishes (terminal `edited`).
- */
-export interface ReviewItem {
-  tripId: string;
-  destination: string;
-  status: ReviewStatus;
-  generatedAt: string;
-  reviewedAt: string | null;
-  reviewedBy: string | null;
-}
-
-/** Daily-cap usage for a trip (contract: JobCapUsage). */
-export interface JobCapUsage {
-  tripId: string;
-  date: string;
-  used: number;
-  limit: number;
-  remaining: number;
 }
