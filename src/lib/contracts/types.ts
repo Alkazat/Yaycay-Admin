@@ -12,7 +12,7 @@
  * a BE contract change (model context section 3), not a local invention.
  */
 
-import type { ActivityKind, TripTier, Variants } from '@alkazat/contracts';
+import type { ActivityKind, Challenge, TripTier, Variants } from '@alkazat/contracts';
 
 // ---------------------------------------------------------------------------
 // Re-exported verbatim from the published contract (drop-in matches).
@@ -34,6 +34,7 @@ export type {
   JobCapUsage,
   Variants,
   VariantBlock,
+  Challenge,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -165,10 +166,4 @@ export interface TripActivity {
   variants?: Variants;
   safety?: { note?: string; flags?: string[] };
   booking?: { name: string; time?: string };
-}
-
-export interface Challenge {
-  type: 'quiz' | 'spot' | 'photo' | 'challenge';
-  prompt: string;
-  answer?: string;
 }
