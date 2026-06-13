@@ -47,6 +47,9 @@ export type {
   Weather,
   Hotel,
   ProductSummary,
+  ProductKind,
+  CreateProductRequest,
+  UpdateProductRequest,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -62,6 +65,18 @@ export interface AdminProgress {
   profileId: string | null;
   activeMode: string | null;
   doneItems: string[];
+}
+
+/**
+ * An admin account row for the admin-management screen. Promoting admins is a
+ * BE concern (role lives in `identity.accounts`); the endpoints are not in the
+ * contract yet - tracked in the BE verification checklist.
+ */
+export interface AdminAccount {
+  userId: string;
+  email: string;
+  role: 'user' | 'admin';
+  createdAt?: string;
 }
 
 /* --------------------------------------------------------------------------
