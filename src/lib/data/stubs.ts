@@ -237,7 +237,8 @@ export const stubProducts: ProductSummary[] = [
     priceId: 'price_datakeep_annual',
     name: 'Keep data (annual)',
     amountUsd: 9,
-    kind: 'tier',
+    kind: 'keep',
+    extendsMonths: 12,
     active: true,
   },
 ];
