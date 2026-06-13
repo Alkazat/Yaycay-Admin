@@ -211,12 +211,23 @@ export const stubProgress: Record<string, AdminProgress[]> = {
 };
 
 export const stubProducts: ProductSummary[] = [
-  { priceId: 'price_holiday_byo', name: 'Holiday (BYO-AI)', amountUsd: 59 },
-  { priceId: 'price_holiday_ai', name: 'Holiday (use-our-AI)', amountUsd: 129 },
+  {
+    priceId: 'price_holiday_byo',
+    name: 'Holiday (BYO-AI)',
+    amountUsd: 59,
+    livemode: true,
+  },
+  {
+    priceId: 'price_holiday_ai',
+    name: 'Holiday (use-our-AI)',
+    amountUsd: 129,
+    livemode: true,
+  },
   {
     priceId: 'price_datakeep_annual',
     name: 'Keep data (annual)',
     amountUsd: 9,
+    livemode: false,
   },
 ];
 
