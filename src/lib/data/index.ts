@@ -16,7 +16,7 @@ import type {
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 import { devStore } from '@/lib/data/store';
-import { adminApi, type Page } from '@/lib/data/api';
+import { adminApi, AdminApiError, type Page } from '@/lib/data/api';
 import {
   buildNewVersion,
   withActivated,
@@ -36,10 +36,51 @@ import {
  * serve local fixtures so every screen is navigable without a live BE.
  */
 
+function logAdminError(where: string, e: unknown): void {
+  const status = e instanceof AdminApiError ? `status=${e.status} ` : '';
+  console.error('[admin-api]', where, status + String(e));
+}
+
+/** Run a live read; on any failure log it and return the fallback (fail soft). */
+async function safe<T>(
+  where: string,
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    logAdminError(where, e);
+    return fallback;
+  }
+}
+
+/**
+ * Liveness probe for the admin API. Returns ok, or the failing status so a
+ * screen can show a clear diagnostic instead of a blank/empty page.
+ */
+export async function probeAdminApi(): Promise<
+  { ok: true } | { ok: false; status: number; message: string }
+> {
+  if (!isAdminDataLive()) return { ok: true };
+  try {
+    await adminApi.get<Page<AiJob>>('/admin/jobs');
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof AdminApiError) {
+      return { ok: false, status: e.status, message: e.message };
+    }
+    return { ok: false, status: 0, message: String(e) };
+  }
+}
+
 export async function listPrompts(): Promise<Prompt[]> {
   if (!isAdminDataLive()) return devStore.getPrompts();
-  const page = await adminApi.get<Page<Prompt>>('/admin/prompts');
-  return page.items;
+  return safe(
+    'listPrompts',
+    async () => (await adminApi.get<Page<Prompt>>('/admin/prompts')).items,
+    [],
+  );
 }
 
 /**
@@ -76,10 +117,13 @@ export async function activatePrompt(id: string): Promise<void> {
 
 export async function listModelRoutes(): Promise<ModelRoute[]> {
   if (!isAdminDataLive()) return devStore.getModelRoutes();
-  const res = await adminApi.get<{ items: ModelRoute[] }>(
-    '/admin/model-routes',
+  return safe(
+    'listModelRoutes',
+    async () =>
+      (await adminApi.get<{ items: ModelRoute[] }>('/admin/model-routes'))
+        .items,
+    [],
   );
-  return res.items;
 }
 
 /** Set the default model / override for a task (PUT /admin/model-routes/{task}). */
@@ -99,8 +143,11 @@ export async function setModelRoute(
 
 export async function listJobs(): Promise<AiJob[]> {
   if (!isAdminDataLive()) return devStore.getJobs();
-  const page = await adminApi.get<Page<AiJob>>('/admin/jobs');
-  return page.items;
+  return safe(
+    'listJobs',
+    async () => (await adminApi.get<Page<AiJob>>('/admin/jobs')).items,
+    [],
+  );
 }
 
 /** Retry a failed job (POST /admin/jobs/{id}/retry; re-enqueues, cap enforced). */
@@ -123,8 +170,12 @@ export async function retryJob(id: string): Promise<AiJob | null> {
 
 export async function listTrips(): Promise<AdminTripSummary[]> {
   if (!isAdminDataLive()) return stubs.stubTrips;
-  const page = await adminApi.get<Page<AdminTripSummary>>('/admin/trips');
-  return page.items;
+  return safe(
+    'listTrips',
+    async () =>
+      (await adminApi.get<Page<AdminTripSummary>>('/admin/trips')).items,
+    [],
+  );
 }
 
 export interface SearchOpts {
@@ -155,18 +206,23 @@ export async function searchTrips(
     );
     return { items, nextCursor: null };
   }
-  return adminApi.get<Page<AdminTripSummary>>(`/admin/trips${buildQuery(opts)}`);
+  return safe(
+    'searchTrips',
+    () =>
+      adminApi.get<Page<AdminTripSummary>>(`/admin/trips${buildQuery(opts)}`),
+    { items: [], nextCursor: null },
+  );
 }
 
 export async function getTripContent(
   tripId: string,
 ): Promise<TripContent | null> {
   if (!isAdminDataLive()) return stubs.stubTripContent[tripId] ?? null;
-  try {
-    return await adminApi.get<TripContent>(`/admin/trips/${tripId}/content`);
-  } catch {
-    return null;
-  }
+  return safe(
+    'getTripContent',
+    () => adminApi.get<TripContent>(`/admin/trips/${tripId}/content`),
+    null,
+  );
 }
 
 /** Child profiles for a trip (GET /admin/trips/{id}/profiles). */
@@ -174,10 +230,16 @@ export async function listTripProfiles(
   tripId: string,
 ): Promise<ChildProfile[]> {
   if (!isAdminDataLive()) return stubs.stubProfiles[tripId] ?? [];
-  const res = await adminApi.get<{ items: ChildProfile[] }>(
-    `/admin/trips/${tripId}/profiles`,
+  return safe(
+    'listTripProfiles',
+    async () =>
+      (
+        await adminApi.get<{ items: ChildProfile[] }>(
+          `/admin/trips/${tripId}/profiles`,
+        )
+      ).items,
+    [],
   );
-  return res.items;
 }
 
 /** Per-profile progress for a trip (GET /admin/trips/{id}/progress). */
@@ -185,30 +247,46 @@ export async function listTripProgress(
   tripId: string,
 ): Promise<AdminProgress[]> {
   if (!isAdminDataLive()) return stubs.stubProgress[tripId] ?? [];
-  const res = await adminApi.get<{ items: AdminProgress[] }>(
-    `/admin/trips/${tripId}/progress`,
+  return safe(
+    'listTripProgress',
+    async () =>
+      (
+        await adminApi.get<{ items: AdminProgress[] }>(
+          `/admin/trips/${tripId}/progress`,
+        )
+      ).items,
+    [],
   );
-  return res.items;
 }
 
 export async function listProducts(): Promise<ProductSummary[]> {
   if (!isAdminDataLive()) return stubs.stubProducts;
-  const res = await adminApi.get<{ items: ProductSummary[] }>(
-    '/admin/products',
+  return safe(
+    'listProducts',
+    async () =>
+      (await adminApi.get<{ items: ProductSummary[] }>('/admin/products'))
+        .items,
+    [],
   );
-  return res.items;
 }
 
 export async function listPurchases(): Promise<Purchase[]> {
   if (!isAdminDataLive()) return stubs.stubPurchases;
-  const page = await adminApi.get<Page<Purchase>>('/admin/purchases');
-  return page.items;
+  return safe(
+    'listPurchases',
+    async () => (await adminApi.get<Page<Purchase>>('/admin/purchases')).items,
+    [],
+  );
 }
 
 export async function listCustomers(): Promise<CustomerSummary[]> {
   if (!isAdminDataLive()) return devStore.getCustomers();
-  const page = await adminApi.get<Page<CustomerSummary>>('/admin/customers');
-  return page.items;
+  return safe(
+    'listCustomers',
+    async () =>
+      (await adminApi.get<Page<CustomerSummary>>('/admin/customers')).items,
+    [],
+  );
 }
 
 /** Search customers by email (GET /admin/customers?query=&cursor=). */
@@ -222,8 +300,13 @@ export async function searchCustomers(
       .filter((c) => !q || c.email.toLowerCase().includes(q));
     return { items, nextCursor: null };
   }
-  return adminApi.get<Page<CustomerSummary>>(
-    `/admin/customers${buildQuery(opts)}`,
+  return safe(
+    'searchCustomers',
+    () =>
+      adminApi.get<Page<CustomerSummary>>(
+        `/admin/customers${buildQuery(opts)}`,
+      ),
+    { items: [], nextCursor: null },
   );
 }
 
@@ -241,8 +324,14 @@ export async function requestCustomerDeletion(
 
 export async function listReviewItems(): Promise<ReviewItem[]> {
   if (!isAdminDataLive()) return pendingFirst(devStore.getReviewItems());
-  const page = await adminApi.get<Page<ReviewItem>>('/admin/content-review');
-  return pendingFirst(page.items);
+  return safe(
+    'listReviewItems',
+    async () =>
+      pendingFirst(
+        (await adminApi.get<Page<ReviewItem>>('/admin/content-review')).items,
+      ),
+    [],
+  );
 }
 
 /**
