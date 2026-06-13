@@ -31,23 +31,46 @@ async function adminToken(): Promise<string | null> {
   return session?.access_token ?? null;
 }
 
+/** Error from a live /admin/* call, carrying the HTTP status for diagnostics. */
+export class AdminApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly path: string,
+    readonly detail?: string,
+  ) {
+    super(`admin ${path} failed: ${status}${detail ? ` - ${detail}` : ''}`);
+    this.name = 'AdminApiError';
+  }
+}
+
 async function request<T>(
   method: 'GET' | 'POST' | 'PUT',
   path: string,
   body?: unknown,
 ): Promise<T> {
   const token = await adminToken();
-  const res = await fetch(`${config.apiBase}${path}`, {
-    method,
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    cache: 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${config.apiBase}${path}`, {
+      method,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store',
+    });
+  } catch (e) {
+    // Network / DNS / TLS failure reaching the API base.
+    throw new AdminApiError(
+      0,
+      path,
+      e instanceof Error ? e.message : 'network error',
+    );
+  }
   if (!res.ok) {
-    throw new Error(`admin ${method} ${path} failed: ${res.status}`);
+    const text = await res.text().catch(() => '');
+    throw new AdminApiError(res.status, path, text.slice(0, 200));
   }
   return (await res.json()) as T;
 }
