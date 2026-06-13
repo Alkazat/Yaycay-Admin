@@ -54,6 +54,9 @@ async function request<T>(
     res = await fetch(`${config.apiBase}${path}`, {
       method,
       headers: {
+        // Supabase Edge Functions gateway requires the anon apikey alongside
+        // the admin JWT (per the BE handoff).
+        ...(config.supabase.anonKey ? { apikey: config.supabase.anonKey } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(body ? { 'Content-Type': 'application/json' } : {}),
       },
