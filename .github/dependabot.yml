@@ -1,0 +1,25 @@
+version: 2
+
+# Keep the shared @alkazat/contracts handshake current. The package lives on
+# GitHub Packages (private to the @alkazat scope), so Dependabot needs a token
+# with read:packages exposed as the PACKAGES_TOKEN Dependabot secret.
+registries:
+  alkazat-github-packages:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{ secrets.PACKAGES_TOKEN }}
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    registries:
+      - alkazat-github-packages
+    schedule:
+      interval: weekly
+    # Only the @alkazat scope; the rest of the tree is managed manually.
+    allow:
+      - dependency-name: "@alkazat/*"
+    commit-message:
+      prefix: chore(deps)
+    labels:
+      - dependencies
