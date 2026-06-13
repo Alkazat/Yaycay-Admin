@@ -108,16 +108,21 @@ export default async function TripInspectPage({
             {day.weather ? (
               <Badge tone="info">
                 {day.weather.summary}
-                {day.weather.high_c != null
-                  ? ` · ${day.weather.low_c ?? '?'}-${day.weather.high_c}C`
+                {day.weather.high != null
+                  ? ` · ${day.weather.low ?? '?'}-${day.weather.high}C`
                   : ''}
               </Badge>
             ) : null}
             {day.hotel ? (
-              <Badge tone={day.hotel.move ? 'alert' : 'default'}>
-                {day.hotel.move ? 'move to ' : 'stay: '}
-                {day.hotel.name}
-              </Badge>
+              (() => {
+                const isMove = day.hotel.phase === 'move';
+                return (
+                  <Badge tone={isMove ? 'alert' : 'default'}>
+                    {isMove ? 'move to ' : 'stay: '}
+                    {day.hotel.name}
+                  </Badge>
+                );
+              })()
             ) : null}
             {day.game ? (
               <Badge tone="success">game: {day.game.title}</Badge>

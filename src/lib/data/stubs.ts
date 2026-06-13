@@ -122,10 +122,10 @@ export const stubTripContent: Record<string, TripContent> = {
           'Singapore has more than 300 parks and 4 nature reserves.',
         weather: {
           summary: 'Hot and humid, afternoon storm',
-          high_c: 32,
-          low_c: 26,
+          high: 32,
+          low: 26,
         },
-        hotel: { name: 'Village Hotel Sentosa', move: true },
+        hotel: { name: 'Village Hotel Sentosa', phase: 'move' },
         game: { kind: 'spot-it', title: 'Spot 5 sea creatures' },
         star_challenge: {
           title: 'Build a sandcastle taller than your bucket',
@@ -192,6 +192,8 @@ export const stubProfiles: Record<string, ChildProfile[]> = {
       interests: ['dinosaurs', 'swimming'],
       dietary: ['nut-free', 'legume-free'],
       medical: ['anaphylaxis (EpiPen)'],
+      created_at: '2026-05-01T09:00:00Z',
+      updated_at: '2026-05-15T09:00:00Z',
     },
     {
       id: 'cp_2',
@@ -199,6 +201,10 @@ export const stubProfiles: Record<string, ChildProfile[]> = {
       age: 9,
       mode: 'explorer_plus',
       interests: ['art', 'animals'],
+      dietary: [],
+      medical: [],
+      created_at: '2026-05-01T09:00:00Z',
+      updated_at: '2026-05-15T09:00:00Z',
     },
   ],
 };
@@ -215,19 +221,25 @@ export const stubProducts: ProductSummary[] = [
     priceId: 'price_holiday_byo',
     name: 'Holiday (BYO-AI)',
     amountUsd: 59,
-    livemode: true,
+    kind: 'tier',
+    tier: 'byo',
+    active: true,
   },
   {
     priceId: 'price_holiday_ai',
     name: 'Holiday (use-our-AI)',
     amountUsd: 129,
-    livemode: true,
+    kind: 'tier',
+    tier: 'ours',
+    active: true,
   },
   {
     priceId: 'price_datakeep_annual',
     name: 'Keep data (annual)',
     amountUsd: 9,
-    livemode: false,
+    kind: 'keep',
+    extendsMonths: 12,
+    active: true,
   },
 ];
 
