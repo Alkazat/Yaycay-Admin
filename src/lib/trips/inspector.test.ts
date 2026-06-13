@@ -19,7 +19,15 @@ describe('presentVariantModes', () => {
 });
 
 describe('profileSafety', () => {
-  const base: ChildProfile = { id: 'p1', name: 'Lenny', interests: [] };
+  const base: ChildProfile = {
+    id: 'p1',
+    name: 'Lenny',
+    interests: [],
+    dietary: [],
+    medical: [],
+    created_at: '2026-05-01T09:00:00Z',
+    updated_at: '2026-05-01T09:00:00Z',
+  };
 
   it('flags dietary and medical entries', () => {
     const out = profileSafety({
