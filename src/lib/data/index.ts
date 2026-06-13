@@ -1,10 +1,13 @@
 import 'server-only';
 import { isAdminDataLive } from '@/lib/config';
 import type {
+  AdminAccount,
   AdminProgress,
+  AdminSession,
   AiJob,
   AiModel,
   ChildProfile,
+  CreateProductRequest,
   CustomerSummary,
   ModelRoute,
   ProductSummary,
@@ -385,5 +388,91 @@ export async function publishEditedContent(
   return adminApi.post<ReviewItem>(
     `/admin/content-review/${tripId}/edit`,
     content,
+  );
+}
+
+// ===========================================================================
+// /admin/me, admin management, and commerce writes
+// ===========================================================================
+
+/** The resolved admin session from BE (GET /admin/me). Stub: a dev session. */
+export async function getAdminMe(): Promise<AdminSession | null> {
+  if (!isAdminDataLive()) {
+    return {
+      userId: 'dev-admin',
+      email: 'dev-admin@yaycay.local',
+      role: 'admin',
+      mfaVerified: true,
+    };
+  }
+  return safe(
+    'getAdminMe',
+    () => adminApi.get<AdminSession>('/admin/me'),
+    null,
+  );
+}
+
+/**
+ * List admin accounts (GET /admin/admins). BE endpoint pending - see the BE
+ * verification checklist; fails soft to [] live, stub list otherwise.
+ */
+export async function listAdmins(): Promise<AdminAccount[]> {
+  if (!isAdminDataLive()) {
+    return [
+      {
+        userId: 'u_dev',
+        email: 'dyeates@dwhy.com.au',
+        role: 'admin',
+        createdAt: '2026-06-13T00:00:00Z',
+      },
+    ];
+  }
+  return safe(
+    'listAdmins',
+    async () =>
+      (await adminApi.get<{ items: AdminAccount[] }>('/admin/admins')).items,
+    [],
+  );
+}
+
+/** Promote an account to admin by email (POST /admin/admins). BE endpoint pending. */
+export async function promoteAdmin(
+  email: string,
+): Promise<AdminAccount | null> {
+  if (!isAdminDataLive()) {
+    return { userId: `u_${email}`, email, role: 'admin' };
+  }
+  return adminApi.post<AdminAccount>('/admin/admins', { email, role: 'admin' });
+}
+
+/** Create a catalogue product (POST /admin/products). Stamps the deploy's Stripe mode. */
+export async function createProduct(
+  input: CreateProductRequest,
+): Promise<ProductSummary | null> {
+  if (!isAdminDataLive()) {
+    return {
+      priceId: input.priceId,
+      name: input.name,
+      amountUsd: input.amountUsd,
+      kind: input.kind ?? 'tier',
+      tier: input.tier,
+      extendsMonths: input.extendsMonths,
+      active: input.active ?? true,
+    };
+  }
+  return adminApi.post<ProductSummary>('/admin/products', input);
+}
+
+/** Patch a product, e.g. activate/deactivate (PATCH /admin/products/{priceId}). */
+export async function setProductActive(
+  priceId: string,
+  active: boolean,
+): Promise<ProductSummary | null> {
+  if (!isAdminDataLive()) {
+    return { priceId, name: priceId, amountUsd: 0, kind: 'tier', active };
+  }
+  return adminApi.patch<ProductSummary>(
+    `/admin/products/${encodeURIComponent(priceId)}`,
+    { active },
   );
 }
