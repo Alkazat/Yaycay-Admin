@@ -77,6 +77,9 @@ export interface ProductSummary {
   name: string;
   amountUsd: number;
   tier?: TripTier;
+  /** Stripe mode (additive). true = live, false = test/sandbox. Undefined when
+   * BE does not yet send it. Surfaced as a Live/Test badge in Commerce. */
+  livemode?: boolean;
 }
 
 /* --------------------------------------------------------------------------

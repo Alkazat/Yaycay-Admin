@@ -75,6 +75,9 @@ can surface them once they land in the admin contract.
 2. Add admin-scoped reads for the reward economy if ops needs to troubleshoot
    it: `GET /admin/trips/{id}/stars`, `/packing`, `/journal`. (Progress already
    exists at `/admin/trips/{id}/progress`.)
+3. Add `livemode: boolean` to `ProductSummary` and `PurchaseSummary` (Stripe
+   mode). Commerce renders a Live/Test badge and warns on a mixed catalogue;
+   `/admin/products` should also scope to the deployment's mode (prod = live).
 
 ## Wiring procedure (per endpoint, once live)
 
