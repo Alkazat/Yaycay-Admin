@@ -22,6 +22,8 @@ describe('profileSafety', () => {
   const base: ChildProfile = {
     id: 'p1',
     name: 'Lenny',
+    type: 'child',
+    pin_set: false,
     interests: [],
     dietary: [],
     medical: [],
