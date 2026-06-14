@@ -1,5 +1,7 @@
 import type {
   AdminProgress,
+  Affiliate,
+  AffiliateRedemption,
   AiJob,
   ChildProfile,
   CustomerSummary,
@@ -278,6 +280,76 @@ export const stubReviewItems: ReviewItem[] = [
     reviewedBy: 'dev-admin@yaycay.local',
   },
 ];
+
+export const stubAffiliates: Affiliate[] = [
+  {
+    id: 'aff_1',
+    name: 'Sunny Travels',
+    email: 'sunny@example.com',
+    handle: '@sunnytravels',
+    code: 'SUNNY15',
+    discountPercent: 15,
+    commissionPercent: 20,
+    landingSlug: 'sunnytravels',
+    status: 'active',
+    createdAt: '2026-05-01T09:00:00Z',
+  },
+  {
+    id: 'aff_2',
+    name: 'Dad on Tour',
+    email: 'dad@example.com',
+    handle: '@dadontour',
+    code: 'DAD10',
+    discountPercent: 10,
+    commissionPercent: 15,
+    landingSlug: 'dadontour',
+    status: 'paused',
+    createdAt: '2026-04-12T09:00:00Z',
+  },
+];
+
+export const stubRedemptions: Record<string, AffiliateRedemption[]> = {
+  SUNNY15: [
+    {
+      purchaseId: 'pur_a1',
+      ownerEmail: 'green@example.com',
+      priceId: 'price_holiday_ai',
+      grossUsd: 129,
+      discountUsd: 19.35,
+      netUsd: 109.65,
+      createdAt: '2026-06-03T10:00:00Z',
+    },
+    {
+      purchaseId: 'pur_a2',
+      ownerEmail: 'wong@example.com',
+      priceId: 'price_holiday_byo',
+      grossUsd: 59,
+      discountUsd: 8.85,
+      netUsd: 50.15,
+      createdAt: '2026-06-20T16:30:00Z',
+    },
+    {
+      purchaseId: 'pur_a3',
+      ownerEmail: 'singh@example.com',
+      priceId: 'price_holiday_ai',
+      grossUsd: 129,
+      discountUsd: 19.35,
+      netUsd: 109.65,
+      createdAt: '2026-05-28T11:15:00Z',
+    },
+  ],
+  DAD10: [
+    {
+      purchaseId: 'pur_b1',
+      ownerEmail: 'lee@example.com',
+      priceId: 'price_holiday_byo',
+      grossUsd: 59,
+      discountUsd: 5.9,
+      netUsd: 53.1,
+      createdAt: '2026-06-09T08:00:00Z',
+    },
+  ],
+};
 
 export const stubPurchases: Purchase[] = [
   {

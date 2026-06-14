@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { getTripContent, listTripProfiles, listTripProgress } from '@/lib/data';
 import { presentVariantModes, profileSafety } from '@/lib/trips/inspector';
+import { personaLabel } from '@/lib/trips/personas';
+import { tripSafetySummary } from '@/lib/trips/safety';
+import { coverageByMode } from '@/lib/trips/coverage';
 
 export default async function TripInspectPage({
   params,
@@ -17,6 +20,8 @@ export default async function TripInspectPage({
   if (!content) notFound();
 
   const doneByProfile = new Map(progress.map((p) => [p.profileId, p]));
+  const safety = tripSafetySummary(profiles, content);
+  const coverage = coverageByMode(profiles, content);
 
   return (
     <>
@@ -24,6 +29,95 @@ export default async function TripInspectPage({
         title={content.trip.destination}
         subtitle={`Trip ${content.trip.id} · read-only inspector`}
       />
+
+      {safety.hasFlags ? (
+        <Card title="Safety roll-up">
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--space-2)',
+              flexWrap: 'wrap',
+              marginBottom: 'var(--space-3)',
+            }}
+          >
+            {safety.flags.map((f) => (
+              <Badge
+                key={`${f.profile}-${f.flag}`}
+                tone={f.kind === 'medical' ? 'alert' : 'default'}
+              >
+                {f.profile}: {f.flag}
+              </Badge>
+            ))}
+          </div>
+          {safety.unacknowledged.length > 0 ? (
+            <p style={{ margin: '0 0 var(--space-2)', color: 'var(--alert)' }}>
+              <strong>Not named in any itinerary safety note:</strong>{' '}
+              {safety.unacknowledged
+                .map((f) => `${f.flag} (${f.profile})`)
+                .join(', ')}
+              . Confirm the AI surfaced these where they matter.
+            </p>
+          ) : null}
+          {safety.bookingsWithoutSafety.length > 0 ? (
+            <p style={{ margin: 0, color: 'var(--muted)' }}>
+              Bookings with no safety note:{' '}
+              {safety.bookingsWithoutSafety
+                .map((b) => `${b.title} (${b.booking})`)
+                .join(', ')}
+              .
+            </p>
+          ) : null}
+          {!safety.hasGaps ? (
+            <p style={{ margin: 0, color: 'var(--success)' }}>
+              Every flag is acknowledged in the itinerary.
+            </p>
+          ) : null}
+        </Card>
+      ) : null}
+
+      {coverage.length > 0 ? (
+        <Card title="Persona coverage">
+          <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+            Tailored variant blocks per explorer mode in use on this trip. A gap
+            is not broken (the base copy still renders) but means that child
+            reads generic copy.
+          </p>
+          {coverage.map((c) => (
+            <div
+              key={c.mode}
+              style={{
+                borderTop: '1px solid var(--border)',
+                padding: 'var(--space-3) 0',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-2)',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <strong>{c.label}</strong>
+                <Badge tone={c.missing.length === 0 ? 'success' : 'alert'}>
+                  {c.covered}/{c.total} covered
+                </Badge>
+              </div>
+              {c.missing.length > 0 ? (
+                <p
+                  style={{
+                    margin: 'var(--space-1) 0 0',
+                    color: 'var(--muted)',
+                  }}
+                >
+                  missing:{' '}
+                  {c.missing.map((m) => `${m.title} (${m.day})`).join(', ')}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </Card>
+      ) : null}
 
       {profiles.length > 0 ? (
         <Card title="Profiles">
@@ -51,7 +145,7 @@ export default async function TripInspectPage({
                     <Badge>age {profile.age}</Badge>
                   ) : null}
                   {profile.mode ? (
-                    <Badge tone="info">{profile.mode}</Badge>
+                    <Badge tone="info">{personaLabel(profile.mode)}</Badge>
                   ) : null}
                   {prog ? (
                     <span style={{ color: 'var(--muted)' }}>
@@ -113,17 +207,17 @@ export default async function TripInspectPage({
                   : ''}
               </Badge>
             ) : null}
-            {day.hotel ? (
-              (() => {
-                const isMove = day.hotel.phase === 'move';
-                return (
-                  <Badge tone={isMove ? 'alert' : 'default'}>
-                    {isMove ? 'move to ' : 'stay: '}
-                    {day.hotel.name}
-                  </Badge>
-                );
-              })()
-            ) : null}
+            {day.hotel
+              ? (() => {
+                  const isMove = day.hotel.phase === 'move';
+                  return (
+                    <Badge tone={isMove ? 'alert' : 'default'}>
+                      {isMove ? 'move to ' : 'stay: '}
+                      {day.hotel.name}
+                    </Badge>
+                  );
+                })()
+              : null}
             {day.game ? (
               <Badge tone="success">game: {day.game.title}</Badge>
             ) : null}

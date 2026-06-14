@@ -63,6 +63,7 @@ The Admin UI already renders these; they light up once BE adds the fields.
 | [ ]       | `ProductSummary`    | `livemode: boolean`                      | Commerce shows a Live/Test badge so a mode mix can't look like real pricing. |
 | [ ]       | `PurchaseSummary`   | `livemode: boolean`                      | Same, for purchases.                                                         |
 | [ ]       | `AdminChildProfile` | `dietary: string[]`, `medical: string[]` | Profiles view surfaces safety flags (allergy/EpiPen) for troubleshooting.    |
+| [ ]       | `ChildProfile` / `AdminChildProfile` | `type: 'child' \| 'guardian'`, `pin_set: boolean` (read-only) | User Types & Access handoff (2026-06-13). Admin profile view will badge the profile type and whether a guardian PIN is set. **Queued in Admin pending this contract bump** - see note below. |
 
 ---
 
@@ -97,3 +98,17 @@ The Admin UI already renders these; they light up once BE adds the fields.
 - Read endpoints **fail soft**: a non-200 logs the status and renders an empty
   screen rather than crashing, so a single broken endpoint never takes the
   console down. The dashboard shows the failing HTTP status for `/admin/jobs`.
+
+### Queued: User Types & Access (handoff 2026-06-13)
+
+Held pending the `@alkazat/contracts` bump that publishes `type` + `pin_set` on
+the profile DTO (section 3). Once Admin re-pins to that version, in one pass:
+
+- Map `mode` to friendly persona labels in the trip inspector - 🐣 Little
+  Explorer (`little`), 🧭 Explorer (`explorer`), 🚀 Big Explorer
+  (`explorer_plus`), 🛡️ Grown Ups (`standard`).
+- Badge **profile type** (child / guardian) and **PIN set** on the profile view
+  in `trips/[tripId]`.
+
+The PIN gate, kid-experience features, and the Explorers/Grown-ups views are
+customer-FE/BE concerns - no Admin action.

@@ -1,4 +1,5 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { listProducts, listPurchases } from '@/lib/data';
 import { createProductAction } from './actions';
 
@@ -22,6 +23,8 @@ export default async function CommercePage() {
         title="Commerce"
         subtitle="Products, prices and purchases. Read-mostly; Stripe is the source of truth."
       />
+
+      <ApiStatusBanner />
 
       <Card title="Catalogue">
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

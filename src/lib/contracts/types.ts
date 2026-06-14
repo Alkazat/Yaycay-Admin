@@ -80,6 +80,78 @@ export interface AdminAccount {
 }
 
 /* --------------------------------------------------------------------------
+ * Pending contract: affiliate / influencer program.
+ *
+ * Admin owns the operator surface for the influencer program (create a code,
+ * see attributed revenue, send a monthly report). The DTOs below are local
+ * stand-ins until BE adds them to @alkazat/contracts - see
+ * docs/HANDOFF-affiliate-program-BE.md for the endpoints + Stripe coupon and
+ * attribution work this depends on. Same precedent as AdminAccount above.
+ * ------------------------------------------------------------------------ */
+
+export type AffiliateStatus = 'active' | 'paused';
+
+/** An influencer in the affiliate program. */
+export interface Affiliate {
+  id: string;
+  /** Influencer's name (shown on the report). */
+  name: string;
+  /** Where the monthly report is emailed. */
+  email: string;
+  /** Social handle, e.g. "@sunnytravels". */
+  handle: string;
+  /** Discount + attribution code a customer enters at checkout, e.g. "SUNNY15". */
+  code: string;
+  /** Customer-facing discount the code applies, as a percentage. */
+  discountPercent: number;
+  /** What we pay the influencer on net revenue, as a percentage. */
+  commissionPercent: number;
+  /** URL-safe slug for the Website affiliate landing page (/go/<slug>). */
+  landingSlug: string;
+  status: AffiliateStatus;
+  createdAt: string;
+}
+
+/** Request body for creating an affiliate (code + slug are derived server-side). */
+export interface CreateAffiliateInput {
+  name: string;
+  email: string;
+  handle: string;
+  discountPercent: number;
+  commissionPercent: number;
+}
+
+/** A single purchase attributed to an affiliate code (from the Stripe webhook). */
+export interface AffiliateRedemption {
+  purchaseId: string;
+  ownerEmail: string;
+  priceId: string;
+  /** List price before the discount. */
+  grossUsd: number;
+  /** Discount the code applied. */
+  discountUsd: number;
+  /** What the customer actually paid (gross - discount). */
+  netUsd: number;
+  createdAt: string;
+}
+
+/** A period summary of an affiliate's revenue and the commission we owe them. */
+export interface AffiliateReport {
+  affiliateCode: string;
+  influencer: string;
+  /** Inclusive ISO start date of the period. */
+  periodStart: string;
+  /** Exclusive ISO end date of the period. */
+  periodEnd: string;
+  redemptions: number;
+  grossRevenueUsd: number;
+  discountGivenUsd: number;
+  netRevenueUsd: number;
+  commissionOwedUsd: number;
+  currency: 'USD';
+}
+
+/* --------------------------------------------------------------------------
  * Content model (model context section 5), trimmed to admin needs.
  *
  * `weather` and `hotel` now adopt the published contract `Weather`/`Hotel`
