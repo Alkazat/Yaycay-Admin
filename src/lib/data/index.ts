@@ -4,9 +4,14 @@ import type {
   AdminAccount,
   AdminProgress,
   AdminSession,
+  Affiliate,
+  AffiliateRedemption,
+  AffiliateReport,
+  AffiliateStatus,
   AiJob,
   AiModel,
   ChildProfile,
+  CreateAffiliateInput,
   CreateProductRequest,
   CustomerSummary,
   ModelRoute,
@@ -17,6 +22,7 @@ import type {
   TripContent,
   AdminTripSummary,
 } from '@/lib/contracts/types';
+import { suggestCode, suggestLandingSlug } from '@/lib/affiliates/code';
 import * as stubs from '@/lib/data/stubs';
 import { devStore } from '@/lib/data/store';
 import { adminApi, AdminApiError, type Page } from '@/lib/data/api';
@@ -461,6 +467,118 @@ export async function createProduct(
     };
   }
   return adminApi.post<ProductSummary>('/admin/products', input);
+}
+
+// ===========================================================================
+// Affiliate / influencer program
+//
+// Operator surface for the influencer program. The BE endpoints are pending
+// (docs/HANDOFF-affiliate-program-BE.md); until they land these serve the stub
+// layer, and reads fail soft to empty like every other admin read.
+// ===========================================================================
+
+export async function listAffiliates(): Promise<Affiliate[]> {
+  if (!isAdminDataLive()) return devStore.getAffiliates();
+  return safe(
+    'listAffiliates',
+    async () =>
+      (await adminApi.get<Page<Affiliate>>('/admin/affiliates')).items,
+    [],
+  );
+}
+
+export async function getAffiliate(code: string): Promise<Affiliate | null> {
+  if (!isAdminDataLive()) return devStore.findAffiliate(code) ?? null;
+  return safe(
+    'getAffiliate',
+    () =>
+      adminApi.get<Affiliate>(`/admin/affiliates/${encodeURIComponent(code)}`),
+    null,
+  );
+}
+
+/**
+ * Create an affiliate. The code + landing slug are derived from the handle and
+ * discount here so the operator sees them before submitting; BE is the
+ * authority that registers the Stripe coupon and guarantees code uniqueness
+ * (POST /admin/affiliates).
+ */
+export async function createAffiliate(
+  input: CreateAffiliateInput,
+): Promise<Affiliate | null> {
+  const code = suggestCode(input.handle, input.discountPercent);
+  const landingSlug = suggestLandingSlug(input.handle);
+  if (!isAdminDataLive()) {
+    const created: Affiliate = {
+      id: `aff_${Date.now()}`,
+      name: input.name,
+      email: input.email,
+      handle: input.handle,
+      code,
+      discountPercent: input.discountPercent,
+      commissionPercent: input.commissionPercent,
+      landingSlug,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
+    devStore.addAffiliate(created);
+    return created;
+  }
+  return adminApi.post<Affiliate>('/admin/affiliates', {
+    ...input,
+    code,
+    landingSlug,
+  });
+}
+
+/** Pause or reactivate an affiliate (PATCH /admin/affiliates/{code}). */
+export async function setAffiliateStatus(
+  code: string,
+  status: AffiliateStatus,
+): Promise<Affiliate | null> {
+  if (!isAdminDataLive()) {
+    return devStore.setAffiliateStatus(code, status) ?? null;
+  }
+  return adminApi.patch<Affiliate>(
+    `/admin/affiliates/${encodeURIComponent(code)}`,
+    { status },
+  );
+}
+
+/** Purchases attributed to an affiliate code (GET /admin/affiliates/{code}/redemptions). */
+export async function listAffiliateRedemptions(
+  code: string,
+): Promise<AffiliateRedemption[]> {
+  if (!isAdminDataLive()) return stubs.stubRedemptions[code] ?? [];
+  return safe(
+    'listAffiliateRedemptions',
+    async () =>
+      (
+        await adminApi.get<Page<AffiliateRedemption>>(
+          `/admin/affiliates/${encodeURIComponent(code)}/redemptions`,
+        )
+      ).items,
+    [],
+  );
+}
+
+/**
+ * Send the monthly report to the influencer. BE renders + sends via the
+ * transactional sender (Brevo) and records it (POST
+ * /admin/affiliates/{code}/report). In stub mode this is a no-op that reports
+ * the recipient so the screen can confirm the action.
+ */
+export async function sendAffiliateReport(
+  code: string,
+  report: AffiliateReport,
+  to: string,
+): Promise<{ sent: boolean; to: string }> {
+  if (!isAdminDataLive()) return { sent: true, to };
+  await adminApi.post(`/admin/affiliates/${encodeURIComponent(code)}/report`, {
+    periodStart: report.periodStart,
+    periodEnd: report.periodEnd,
+  });
+  return { sent: true, to };
 }
 
 /** Patch a product, e.g. activate/deactivate (PATCH /admin/products/{priceId}). */

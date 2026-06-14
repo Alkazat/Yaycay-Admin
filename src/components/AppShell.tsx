@@ -11,6 +11,7 @@ const NAV = [
   { href: '/jobs', label: 'Jobs' },
   { href: '/content-review', label: 'Content review' },
   { href: '/commerce', label: 'Commerce' },
+  { href: '/affiliates', label: 'Affiliates' },
   { href: '/customers', label: 'Customers' },
   { href: '/admins', label: 'Admins' },
   { href: '/audit', label: 'Audit' },

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { searchCustomers } from '@/lib/data';
 import { deletionRequestAction } from './actions';
 
@@ -30,6 +31,7 @@ export default async function CustomersPage({
         title="Customers"
         subtitle="Account lookup, entitlement, retention status and data-deletion requests."
       />
+      <ApiStatusBanner />
       <Card>
         <form method="get" style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <input

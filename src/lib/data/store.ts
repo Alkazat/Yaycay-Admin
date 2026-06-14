@@ -1,5 +1,7 @@
 import 'server-only';
 import type {
+  Affiliate,
+  AffiliateStatus,
   AiJob,
   AuditEntry,
   CustomerSummary,
@@ -24,6 +26,7 @@ const modelRoutes: ModelRoute[] = stubs.stubModelRoutes.map((r) => ({ ...r }));
 const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
 const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
 const reviewItems: ReviewItem[] = stubs.stubReviewItems.map((r) => ({ ...r }));
+const affiliates: Affiliate[] = stubs.stubAffiliates.map((a) => ({ ...a }));
 const audit: AuditEntry[] = [];
 
 export const devStore = {
@@ -79,6 +82,25 @@ export const devStore = {
     status: ReviewStatus,
   ): ReviewItem | undefined {
     const found = reviewItems.find((r) => r.tripId === tripId);
+    if (!found) return undefined;
+    found.status = status;
+    return { ...found };
+  },
+  getAffiliates(): Affiliate[] {
+    return affiliates.map((a) => ({ ...a }));
+  },
+  findAffiliate(code: string): Affiliate | undefined {
+    const found = affiliates.find((a) => a.code === code);
+    return found ? { ...found } : undefined;
+  },
+  addAffiliate(affiliate: Affiliate): void {
+    affiliates.unshift({ ...affiliate });
+  },
+  setAffiliateStatus(
+    code: string,
+    status: AffiliateStatus,
+  ): Affiliate | undefined {
+    const found = affiliates.find((a) => a.code === code);
     if (!found) return undefined;
     found.status = status;
     return { ...found };

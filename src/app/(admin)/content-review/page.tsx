@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { listReviewItems } from '@/lib/data';
 import type { ReviewStatus } from '@/lib/contracts/types';
 import { approveAction } from './actions';
@@ -31,6 +32,7 @@ export default async function ContentReviewPage() {
         title="Content review"
         subtitle="The quality bar for AI-generated content before it reaches a family. Approve as is, or edit then publish."
       />
+      <ApiStatusBanner />
       {items.length === 0 ? (
         <Card>
           <p style={{ margin: 0 }}>Nothing awaiting review.</p>

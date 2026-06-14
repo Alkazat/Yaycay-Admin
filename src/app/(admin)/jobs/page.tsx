@@ -1,4 +1,5 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { listJobs } from '@/lib/data';
 import { usageByTripDay, DAILY_CAP } from '@/lib/jobs/cap';
 import type { AiJobStatus } from '@/lib/contracts/types';
@@ -21,6 +22,8 @@ export default async function JobsPage() {
         title="Jobs"
         subtitle="ai_jobs stream: generation, ingestion, chat. Triage failures, retry, and watch the daily cap."
       />
+
+      <ApiStatusBanner />
 
       <Card title={`Daily cap usage (cap ${DAILY_CAP} per trip per day)`}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { searchTrips } from '@/lib/data';
 
 const inputStyle: React.CSSProperties = {
@@ -29,6 +30,7 @@ export default async function TripsPage({
         title="Trips"
         subtitle="Search a customer or trip and inspect trip_content, profiles and progress."
       />
+      <ApiStatusBanner />
       <Card>
         <form method="get" style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <input
