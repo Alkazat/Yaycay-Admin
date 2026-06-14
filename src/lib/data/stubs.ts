@@ -1,4 +1,5 @@
 import type {
+  AdminConnector,
   AdminProgress,
   Affiliate,
   AffiliateRedemption,
@@ -263,6 +264,42 @@ export const stubCustomers: CustomerSummary[] = [
     tier: 'byo',
     retentionExpiresAt: null,
     deletionRequested: true,
+  },
+];
+
+export const stubConnectors: AdminConnector[] = [
+  {
+    id: 'g_1',
+    userId: 'u_2',
+    ownerEmail: 'another@example.com',
+    assistant: 'Claude (claude.ai)',
+    clientId: 'mcp_client_anthropic',
+    scopes: ['yaycay.read', 'yaycay.plan'],
+    status: 'active',
+    createdAt: '2026-06-02T20:10:00Z',
+    lastUsedAt: '2026-06-13T22:41:00Z',
+  },
+  {
+    id: 'g_2',
+    userId: 'u_1',
+    ownerEmail: 'family@example.com',
+    assistant: 'ChatGPT (chatgpt.com)',
+    clientId: 'mcp_client_openai',
+    scopes: ['yaycay.read'],
+    status: 'active',
+    createdAt: '2026-06-05T11:20:00Z',
+    lastUsedAt: null,
+  },
+  {
+    id: 'g_3',
+    userId: 'u_1',
+    ownerEmail: 'family@example.com',
+    assistant: 'Gemini',
+    clientId: 'mcp_client_google',
+    scopes: ['yaycay.read', 'yaycay.plan'],
+    status: 'revoked',
+    createdAt: '2026-05-18T09:00:00Z',
+    lastUsedAt: '2026-05-30T14:05:00Z',
   },
 ];
 

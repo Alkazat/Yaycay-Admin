@@ -2,6 +2,7 @@ import 'server-only';
 import { isAdminDataLive } from '@/lib/config';
 import type {
   AdminAccount,
+  AdminConnector,
   AdminProgress,
   AdminSession,
   Affiliate,
@@ -579,6 +580,50 @@ export async function sendAffiliateReport(
     periodEnd: report.periodEnd,
   });
   return { sent: true, to };
+}
+
+// ===========================================================================
+// BYO-AI MCP connectors (Connected assistants)
+//
+// Cross-account ops view of the OAuth grants behind the FE's MCP server. The
+// BE endpoints are pending (docs/HANDOFF-connectors-admin-BE.md); until they
+// land these serve the stub layer, and the list read fails soft to empty.
+// ===========================================================================
+
+/** List connected assistants, optionally filtered by owner email / assistant. */
+export async function listConnectors(
+  opts: SearchOpts = {},
+): Promise<Page<AdminConnector>> {
+  if (!isAdminDataLive()) {
+    const q = (opts.query ?? '').toLowerCase().trim();
+    const items = devStore
+      .getConnectors()
+      .filter(
+        (c) =>
+          !q ||
+          c.ownerEmail.toLowerCase().includes(q) ||
+          c.assistant.toLowerCase().includes(q),
+      );
+    return { items, nextCursor: null };
+  }
+  return safe(
+    'listConnectors',
+    () =>
+      adminApi.get<Page<AdminConnector>>(
+        `/admin/connectors${buildQuery(opts)}`,
+      ),
+    { items: [], nextCursor: null },
+  );
+}
+
+/** Revoke a connected assistant (POST /admin/connectors/{id}/revoke). */
+export async function revokeConnector(
+  id: string,
+): Promise<AdminConnector | null> {
+  if (!isAdminDataLive()) return devStore.revokeConnector(id) ?? null;
+  return adminApi.post<AdminConnector>(
+    `/admin/connectors/${encodeURIComponent(id)}/revoke`,
+  );
 }
 
 /** Patch a product, e.g. activate/deactivate (PATCH /admin/products/{priceId}). */
