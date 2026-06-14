@@ -7,6 +7,8 @@ const profiles: ChildProfile[] = [
     id: 'cp_1',
     name: 'Lenny',
     age: 6,
+    type: 'child',
+    pin_set: false,
     mode: 'explorer',
     interests: [],
     dietary: ['nut-free'],

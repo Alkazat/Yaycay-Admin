@@ -1,4 +1,5 @@
 import 'server-only';
+import { randomUUID } from 'node:crypto';
 import type {
   Affiliate,
   AffiliateStatus,
@@ -9,6 +10,9 @@ import type {
   Prompt,
   ReviewItem,
   ReviewStatus,
+  StartSupportSessionInput,
+  SupportSession,
+  SupportSessionSnapshot,
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
 
@@ -28,6 +32,14 @@ const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
 const reviewItems: ReviewItem[] = stubs.stubReviewItems.map((r) => ({ ...r }));
 const affiliates: Affiliate[] = stubs.stubAffiliates.map((a) => ({ ...a }));
 const audit: AuditEntry[] = [];
+const supportSessions: SupportSession[] = [];
+
+function withActive(s: SupportSession): SupportSession {
+  return {
+    ...s,
+    active: s.endedAt == null && new Date(s.expiresAt).getTime() > Date.now(),
+  };
+}
 
 export const devStore = {
   getPrompts(): Prompt[] {
@@ -110,5 +122,59 @@ export const devStore = {
   },
   addAudit(entry: AuditEntry): void {
     audit.unshift({ ...entry });
+  },
+  getSupportSessions(activeOnly = false): SupportSession[] {
+    return supportSessions
+      .map(withActive)
+      .filter((s) => (activeOnly ? s.active : true));
+  },
+  startSupportSession(input: StartSupportSessionInput): SupportSession {
+    const target =
+      (input.targetUserId &&
+        customers.find((c) => c.userId === input.targetUserId)) ||
+      (input.targetEmail &&
+        customers.find(
+          (c) => c.email.toLowerCase() === input.targetEmail!.toLowerCase(),
+        )) ||
+      undefined;
+    const ttl = Math.min(Math.max(Math.floor(input.ttlMinutes ?? 30), 1), 120);
+    const now = Date.now();
+    const session: SupportSession = {
+      id: randomUUID(),
+      actorId: 'dev-admin',
+      actorEmail: 'dev-admin@yaycay.local',
+      targetUserId: target?.userId ?? input.targetUserId ?? 'unknown',
+      targetEmail: target?.email ?? input.targetEmail ?? null,
+      reason: input.reason,
+      mode: 'read_only',
+      startedAt: new Date(now).toISOString(),
+      expiresAt: new Date(now + ttl * 60_000).toISOString(),
+      endedAt: null,
+      endedReason: null,
+      active: true,
+    };
+    supportSessions.unshift(session);
+    return { ...session };
+  },
+  endSupportSession(id: string): SupportSession | undefined {
+    const found = supportSessions.find((s) => s.id === id);
+    if (!found) return undefined;
+    if (!found.endedAt) {
+      found.endedAt = new Date().toISOString();
+      found.endedReason = 'manual';
+    }
+    return withActive(found);
+  },
+  getSupportSnapshot(id: string): SupportSessionSnapshot | undefined {
+    const found = supportSessions.find((s) => s.id === id);
+    if (!found) return undefined;
+    const customer = customers.find((c) => c.userId === found.targetUserId);
+    if (!customer) return undefined;
+    return {
+      session: withActive(found),
+      customer: { ...customer },
+      profiles: [],
+      trips: stubs.stubTrips.filter((t) => t.ownerEmail === customer.email),
+    };
   },
 };
