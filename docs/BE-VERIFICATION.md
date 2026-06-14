@@ -63,7 +63,7 @@ The Admin UI already renders these; they light up once BE adds the fields.
 | [ ]       | `ProductSummary`    | `livemode: boolean`                      | Commerce shows a Live/Test badge so a mode mix can't look like real pricing. |
 | [ ]       | `PurchaseSummary`   | `livemode: boolean`                      | Same, for purchases.                                                         |
 | [ ]       | `AdminChildProfile` | `dietary: string[]`, `medical: string[]` | Profiles view surfaces safety flags (allergy/EpiPen) for troubleshooting.    |
-| [ ]       | `ChildProfile` / `AdminChildProfile` | `type: 'child' \| 'guardian'`, `pin_set: boolean` (read-only) | User Types & Access handoff (2026-06-13). Admin profile view will badge the profile type and whether a guardian PIN is set. **Queued in Admin pending this contract bump** - see note below. |
+| [ ]       | `ChildProfile` / `AdminChildProfile` | `type: 'child' \| 'parent_carer'`, `pin_set: boolean` (read-only) | User Types & Access handoff (2026-06-13). Admin profile view will badge the profile type and whether a parent/carer PIN is set. **Now in `AdminChildProfile` as of contract v0.17; queued in Admin pending the re-pin** - see note below. |
 
 ---
 
@@ -101,13 +101,13 @@ The Admin UI already renders these; they light up once BE adds the fields.
 
 ### Queued: User Types & Access (handoff 2026-06-13)
 
-Held pending the `@alkazat/contracts` bump that publishes `type` + `pin_set` on
-the profile DTO (section 3). Once Admin re-pins to that version, in one pass:
+Held pending the `@alkazat/contracts@^0.17` re-pin that publishes `type` +
+`pin_set` on the profile DTO (section 3). Once Admin re-pins to that version, in one pass:
 
 - Map `mode` to friendly persona labels in the trip inspector - 🐣 Little
   Explorer (`little`), 🧭 Explorer (`explorer`), 🚀 Big Explorer
   (`explorer_plus`), 🛡️ Grown Ups (`standard`).
-- Badge **profile type** (child / guardian) and **PIN set** on the profile view
+- Badge **profile type** (child / parent_carer) and **PIN set** on the profile view
   in `trips/[tripId]`.
 
 The PIN gate, kid-experience features, and the Explorers/Grown-ups views are

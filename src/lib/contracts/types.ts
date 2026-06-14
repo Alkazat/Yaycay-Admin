@@ -14,8 +14,10 @@
 
 import type {
   ActivityKind,
+  AdminTripSummary,
   Challenge,
   ChildProfile,
+  CustomerSummary,
   Hotel,
   ProductSummary,
   Variants,
@@ -149,6 +151,71 @@ export interface AffiliateReport {
   netRevenueUsd: number;
   commissionOwedUsd: number;
   currency: 'USD';
+}
+
+/* --------------------------------------------------------------------------
+ * Pending contract: admin support sessions ("view-as").
+ *
+ * A support session is a time-boxed, reason-gated, audited record of an admin
+ * inspecting ONE customer's data. It is an OVERSIGHT record, not a credential:
+ * no customer login link, access/refresh token, or auth cookie is ever issued.
+ * The admin inspects data through the AAL2-gated /admin/support-sessions/*
+ * surface; the session scopes, logs, time-boxes, and surfaces that access.
+ * Acting AS the customer (writes) is out of scope by design.
+ *
+ * BE owns the surface; these shapes mirror @alkazat/contracts and are kept
+ * local until the package republishes (same precedent as AdminAccount).
+ * ------------------------------------------------------------------------ */
+
+export type SupportSessionMode = 'read_only';
+export type SupportSessionEndReason = 'manual' | 'expired';
+
+export interface SupportSession {
+  id: string;
+  /** The admin who opened the session. */
+  actorId: string;
+  actorEmail: string | null;
+  /** The customer being inspected. */
+  targetUserId: string;
+  targetEmail: string | null;
+  /** Mandatory justification (e.g. a ticket reference); audited. */
+  reason: string;
+  mode: SupportSessionMode;
+  startedAt: string;
+  expiresAt: string;
+  endedAt: string | null;
+  endedReason: SupportSessionEndReason | null;
+  /** Derived server-side: not ended and not past expiresAt. */
+  active: boolean;
+}
+
+/** Body for opening a session. One of targetUserId / targetEmail is required. */
+export interface StartSupportSessionInput {
+  targetUserId?: string;
+  targetEmail?: string;
+  reason: string;
+  /** Clamped server-side (default 30, max 120). */
+  ttlMinutes?: number;
+}
+
+/** A child / parent-carer profile as surfaced in a support snapshot. */
+export interface SupportProfile {
+  id: string;
+  name: string;
+  age: number;
+  type: string;
+  pin_set: boolean;
+  interests: string[];
+  /** Medical/dietary flags surfaced to adults as safety callouts. */
+  medical?: string[];
+}
+
+/** Read-only customer footprint returned for an active support session. */
+export interface SupportSessionSnapshot {
+  session: SupportSession;
+  customer: CustomerSummary;
+  profiles: SupportProfile[];
+  trips: AdminTripSummary[];
 }
 
 /* --------------------------------------------------------------------------

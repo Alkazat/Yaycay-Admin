@@ -22,6 +22,9 @@ import type {
   ReviewItem,
   TripContent,
   AdminTripSummary,
+  StartSupportSessionInput,
+  SupportSession,
+  SupportSessionSnapshot,
 } from '@/lib/contracts/types';
 import { suggestCode, suggestLandingSlug } from '@/lib/affiliates/code';
 import * as stubs from '@/lib/data/stubs';
@@ -580,6 +583,61 @@ export async function sendAffiliateReport(
     periodEnd: report.periodEnd,
   });
   return { sent: true, to };
+}
+
+// ===========================================================================
+// Admin support sessions ("view-as")
+//
+// A time-boxed, reason-gated, audited inspection of ONE customer's data. No
+// customer credential is ever minted - reads go through the AAL2-gated
+// /admin/support-sessions/* surface; the session scopes, logs and expires that
+// access. Stub mode keeps the screen navigable without a live BE.
+// ===========================================================================
+
+/** List support sessions (GET /admin/support-sessions[?active=true]). */
+export async function listSupportSessions(
+  activeOnly = false,
+): Promise<SupportSession[]> {
+  if (!isAdminDataLive()) return devStore.getSupportSessions(activeOnly);
+  const qs = activeOnly ? '?active=true' : '';
+  return safe(
+    'listSupportSessions',
+    async () =>
+      (await adminApi.get<Page<SupportSession>>(`/admin/support-sessions${qs}`))
+        .items,
+    [],
+  );
+}
+
+/** Open a support session for one customer (POST /admin/support-sessions). */
+export async function startSupportSession(
+  input: StartSupportSessionInput,
+): Promise<SupportSession> {
+  if (!isAdminDataLive()) return devStore.startSupportSession(input);
+  return adminApi.post<SupportSession>('/admin/support-sessions', input);
+}
+
+/** Close an open session (POST /admin/support-sessions/{id}/end). */
+export async function endSupportSession(
+  id: string,
+): Promise<SupportSession | null> {
+  if (!isAdminDataLive()) return devStore.endSupportSession(id) ?? null;
+  return adminApi.post<SupportSession>(`/admin/support-sessions/${id}/end`);
+}
+
+/** Read-only customer snapshot for an active session (GET .../{id}/snapshot). */
+export async function getSupportSessionSnapshot(
+  id: string,
+): Promise<SupportSessionSnapshot | null> {
+  if (!isAdminDataLive()) return devStore.getSupportSnapshot(id) ?? null;
+  return safe(
+    'getSupportSessionSnapshot',
+    () =>
+      adminApi.get<SupportSessionSnapshot>(
+        `/admin/support-sessions/${id}/snapshot`,
+      ),
+    null,
+  );
 }
 
 // ===========================================================================
