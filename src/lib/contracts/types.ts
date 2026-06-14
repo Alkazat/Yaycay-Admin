@@ -219,6 +219,37 @@ export interface SupportSessionSnapshot {
 }
 
 /* --------------------------------------------------------------------------
+ * Pending contract: BYO-AI MCP connectors (admin/ops view).
+ *
+ * The FE ships an OAuth-protected MCP server; a parent connects their own AI
+ * (Claude / ChatGPT / Gemini) and it plans trips through the contract on their
+ * behalf. Admin owns the cross-account ops view: see who connected what, and
+ * revoke. DTOs are local stand-ins until BE adds an admin-scoped read + revoke
+ * to @alkazat/contracts - see docs/HANDOFF-connectors-admin-BE.md.
+ * ------------------------------------------------------------------------ */
+
+export type ConnectorScope = 'yaycay.read' | 'yaycay.plan';
+export type ConnectorStatus = 'active' | 'revoked';
+
+/** One connected assistant (an OAuth grant) as surfaced to admin ops. */
+export interface AdminConnector {
+  /** Grant id, used to revoke. */
+  id: string;
+  /** Owning account. */
+  userId: string;
+  ownerEmail: string;
+  /** Human label for the assistant / OAuth client, e.g. "Claude (claude.ai)". */
+  assistant: string;
+  /** OAuth client id that registered (RFC 7591 dynamic registration). */
+  clientId: string;
+  scopes: ConnectorScope[];
+  status: ConnectorStatus;
+  createdAt: string;
+  /** Last time a tool call used this grant; null if never. */
+  lastUsedAt: string | null;
+}
+
+/* --------------------------------------------------------------------------
  * Content model (model context section 5), trimmed to admin needs.
  *
  * `weather` and `hotel` now adopt the published contract `Weather`/`Hotel`

@@ -10,6 +10,7 @@ const NAV = [
   { href: '/trips', label: 'Trips' },
   { href: '/jobs', label: 'Jobs' },
   { href: '/content-review', label: 'Content review' },
+  { href: '/connectors', label: 'Connected assistants' },
   { href: '/commerce', label: 'Commerce' },
   { href: '/affiliates', label: 'Affiliates' },
   { href: '/customers', label: 'Customers' },
@@ -37,14 +38,31 @@ export function AppShell({
           padding: 'var(--space-6) var(--space-4)',
         }}
       >
-        <div
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.4rem',
-            marginBottom: 'var(--space-6)',
-          }}
-        >
-          Yaycay Admin
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/yaycay-wordmark.png"
+            alt="Yaycay Admin"
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: 180,
+              height: 'auto',
+            }}
+          />
+          <span
+            style={{
+              display: 'block',
+              fontFamily: 'var(--font-display)',
+              fontSize: '0.8rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              opacity: 0.85,
+              marginTop: 'var(--space-1)',
+            }}
+          >
+            Admin
+          </span>
         </div>
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {NAV.map((item) => (

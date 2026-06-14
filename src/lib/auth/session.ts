@@ -2,7 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
-import { config, isSupabaseConfigured } from '@/lib/config';
+import { config, missingPublicSupabaseEnv } from '@/lib/config';
 import type { AdminSession } from '@/lib/contracts/types';
 import { evaluateAccess } from '@/lib/auth/guard';
 
@@ -18,7 +18,10 @@ import { evaluateAccess } from '@/lib/auth/guard';
  */
 
 export async function getAdminSession(): Promise<AdminSession | null> {
-  if (!isSupabaseConfigured()) {
+  // Resolving the session uses the SSR auth client, which needs the public
+  // Supabase env. Without it createServerClient throws and the route 500s, so a
+  // missing/partial config is treated as "no session" (and dev gets the stub).
+  if (missingPublicSupabaseEnv().length > 0) {
     if (config.devBypass) {
       return {
         userId: 'dev-admin',

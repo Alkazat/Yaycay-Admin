@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type {
+  AdminConnector,
   Affiliate,
   AffiliateStatus,
   AiJob,
@@ -31,6 +32,9 @@ const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
 const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
 const reviewItems: ReviewItem[] = stubs.stubReviewItems.map((r) => ({ ...r }));
 const affiliates: Affiliate[] = stubs.stubAffiliates.map((a) => ({ ...a }));
+const connectors: AdminConnector[] = stubs.stubConnectors.map((c) => ({
+  ...c,
+}));
 const audit: AuditEntry[] = [];
 const supportSessions: SupportSession[] = [];
 
@@ -115,6 +119,15 @@ export const devStore = {
     const found = affiliates.find((a) => a.code === code);
     if (!found) return undefined;
     found.status = status;
+    return { ...found };
+  },
+  getConnectors(): AdminConnector[] {
+    return connectors.map((c) => ({ ...c }));
+  },
+  revokeConnector(id: string): AdminConnector | undefined {
+    const found = connectors.find((c) => c.id === id);
+    if (!found) return undefined;
+    found.status = 'revoked';
     return { ...found };
   },
   getAudit(): AuditEntry[] {

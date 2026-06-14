@@ -15,6 +15,12 @@ const PUBLIC_PREFIXES = [
   '/api/health',
   '/_next',
   '/favicon.ico',
+  // Public static brand assets and app-router icons. They carry no admin data
+  // and must be reachable pre-auth, otherwise next/image cannot fetch the
+  // wordmark and the logo falls back to its alt text.
+  '/brand',
+  '/icon.png',
+  '/apple-icon.png',
 ];
 
 function isPublic(pathname: string): boolean {
