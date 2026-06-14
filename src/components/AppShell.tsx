@@ -38,11 +38,16 @@ export function AppShell({
       >
         <div
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
             fontFamily: 'var(--font-display)',
             fontSize: '1.4rem',
             marginBottom: 'var(--space-6)',
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/yaycay-glyph.png" alt="" width={28} height={28} />
           Yaycay Admin
         </div>
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
