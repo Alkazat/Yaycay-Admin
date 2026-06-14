@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Card } from '@/components/ui';
 import { SignIn } from './SignIn';
 
@@ -17,7 +18,19 @@ export default function LoginPage() {
       }}
     >
       <div style={{ width: 'min(420px, 100%)' }}>
-        <h1 style={{ textAlign: 'center' }}>Yaycay Admin</h1>
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
+          <Image
+            src="/brand/yaycay-wordmark.png"
+            alt="Yaycay"
+            width={176}
+            height={122}
+            priority
+            style={{ height: 'auto', display: 'inline-block', maxWidth: '62%' }}
+          />
+          <h1 style={{ margin: 'var(--space-2) 0 0', fontSize: '1.05rem', fontWeight: 700 }}>
+            Admin console
+          </h1>
+        </div>
         <Card title="Sign in">
           <SignIn />
         </Card>
