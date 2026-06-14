@@ -8,6 +8,9 @@ generated content).
 Read `00-MODEL-CONTEXT.md` first. This app is an **admin-scoped consumer** of
 the BE contract. It never runs inference itself; it configures what BE runs.
 
+For brand/logo usage in admin chrome, see [`BRAND-ASSETS.md`](BRAND-ASSETS.md) — wear the brand
+lightly here (wordmark/glyph, never the full marketing lockup).
+
 ## Security posture (non-negotiable)
 
 - **Off-domain:** its own domain, never a guessable product subdomain.
