@@ -18,19 +18,16 @@ export default function LoginPage() {
       }}
     >
       <div style={{ width: 'min(420px, 100%)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
+        <h1 style={{ textAlign: 'center', margin: '0 0 var(--space-4)' }}>
           <Image
             src="/brand/yaycay-wordmark.png"
-            alt="Yaycay"
-            width={176}
-            height={122}
+            alt="Yaycay Admin"
+            width={200}
+            height={139}
             priority
-            style={{ height: 'auto', display: 'inline-block', maxWidth: '62%' }}
+            style={{ display: 'inline-block', height: 'auto', maxWidth: '68%' }}
           />
-          <h1 style={{ margin: 'var(--space-2) 0 0', fontSize: '1.05rem', fontWeight: 700 }}>
-            Admin console
-          </h1>
-        </div>
+        </h1>
         <Card title="Sign in">
           <SignIn />
         </Card>
