@@ -78,6 +78,30 @@ can surface them once they land in the admin contract.
 3. Add `livemode: boolean` to `ProductSummary` and `PurchaseSummary` (Stripe
    mode). Commerce renders a Live/Test badge and warns on a mixed catalogue;
    `/admin/products` should also scope to the deployment's mode (prod = live).
+4. **Affiliate / influencer program (new surface).** Admin's `/affiliates`
+   screens are built and stub-backed. They need new DTOs (`Affiliate`,
+   `CreateAffiliateInput`, `AffiliateRedemption`), `discountCode`/`discountUsd`
+   on `PurchaseSummary`, and the endpoints `GET/POST /admin/affiliates`,
+   `GET/PATCH /admin/affiliates/{code}`,
+   `GET /admin/affiliates/{code}/redemptions`, and
+   `POST /admin/affiliates/{code}/report`. The dependency is the Stripe coupon
+   plus webhook attribution. Full brief: `docs/HANDOFF-affiliate-program-BE.md`
+   (the Website side is `docs/HANDOFF-affiliate-program-WEBSITE.md`). Accessors
+   already exist in `src/lib/data/index.ts` (`listAffiliates`, `getAffiliate`,
+   `createAffiliate`, `setAffiliateStatus`, `listAffiliateRedemptions`,
+   `sendAffiliateReport`) and fail soft to stubs.
+
+## Admin-side features that need no contract change (shipped)
+
+These were built against fields already in the contract, so they light up with
+real data the moment `NEXT_PUBLIC_API_BASE` is set; no BE work required.
+
+| Feature             | Where                                  | Uses                                            |
+| ------------------- | -------------------------------------- | ----------------------------------------------- |
+| Persona labels      | trip inspector profile badges          | `ChildProfile.mode` -> friendly name + emoji    |
+| Safety roll-up      | trip inspector                         | profile `dietary`/`medical` + activity `safety` |
+| Persona coverage    | trip inspector                         | `activity.variants` vs each child's `mode`      |
+| API status banner   | every list screen + dashboard          | the `/admin/jobs` liveness probe                |
 
 ## Wiring procedure (per endpoint, once live)
 
