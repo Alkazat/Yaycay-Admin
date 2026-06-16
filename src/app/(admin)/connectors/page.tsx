@@ -1,6 +1,7 @@
 import { PageHeader, Card, Stat, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { NoticeBanner } from '@/components/NoticeBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listConnectors } from '@/lib/data';
 import { summariseConnectors, daysSince } from '@/lib/connectors/summary';
 import { revokeConnectorAction } from './actions';
@@ -64,8 +65,8 @@ export default async function ConnectorsPage({
             placeholder="owner email or assistant"
             style={inputStyle}
           />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Searching..."
             style={{
               minHeight: 'var(--tap-min)',
               padding: '0 var(--space-4)',
@@ -76,7 +77,7 @@ export default async function ConnectorsPage({
             }}
           >
             Search
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 
@@ -134,8 +135,8 @@ export default async function ConnectorsPage({
                     {c.status === 'active' ? (
                       <form action={revokeConnectorAction}>
                         <input type="hidden" name="id" value={c.id} />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          pendingLabel="Revoking..."
                           style={{
                             minHeight: 'var(--tap-min)',
                             padding: '0 var(--space-4)',
@@ -148,7 +149,7 @@ export default async function ConnectorsPage({
                           }}
                         >
                           Revoke
-                        </button>
+                        </SubmitButton>
                       </form>
                     ) : null}
                   </td>

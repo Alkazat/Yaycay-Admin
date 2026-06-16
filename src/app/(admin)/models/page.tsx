@@ -1,4 +1,5 @@
 import { PageHeader, Card } from '@/components/ui';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listModelRoutes } from '@/lib/data';
 import type { AiModel } from '@/lib/contracts/types';
 import { setRouteAction } from './actions';
@@ -66,8 +67,8 @@ export default async function ModelsPage() {
                 ))}
               </select>
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Saving..."
               style={{
                 minHeight: 'var(--tap-min)',
                 padding: '0 var(--space-6)',
@@ -81,7 +82,7 @@ export default async function ModelsPage() {
               }}
             >
               Save
-            </button>
+            </SubmitButton>
           </form>
         </Card>
       ))}

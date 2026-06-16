@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { NoticeBanner } from '@/components/NoticeBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { getAffiliate, listAffiliateRedemptions } from '@/lib/data';
 import {
   monthPeriodFromKey,
@@ -111,8 +112,8 @@ export default async function AffiliateReportPage({
                 name="status"
                 value={affiliate.status === 'active' ? 'paused' : 'active'}
               />
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Saving..."
                 style={{
                   ...buttonStyle,
                   background: 'var(--surface)',
@@ -121,12 +122,12 @@ export default async function AffiliateReportPage({
                 }}
               >
                 {affiliate.status === 'active' ? 'Pause' : 'Reactivate'}
-              </button>
+              </SubmitButton>
             </form>
             <form action={archiveAffiliateAction}>
               <input type="hidden" name="code" value={affiliate.code} />
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Archiving..."
                 style={{
                   ...buttonStyle,
                   background: 'var(--surface)',
@@ -135,7 +136,7 @@ export default async function AffiliateReportPage({
                 }}
               >
                 Archive
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>
@@ -230,12 +231,12 @@ export default async function AffiliateReportPage({
               style={fieldStyle}
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Saving..."
             style={{ ...fieldStyle, cursor: 'pointer', fontWeight: 700 }}
           >
             Save changes
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 
@@ -266,8 +267,8 @@ export default async function AffiliateReportPage({
               }}
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Loading..."
             style={{
               ...buttonStyle,
               background: 'var(--surface)',
@@ -276,7 +277,7 @@ export default async function AffiliateReportPage({
             }}
           >
             View
-          </button>
+          </SubmitButton>
         </form>
 
         <p style={{ marginTop: 0, color: 'var(--muted)' }}>
@@ -306,9 +307,9 @@ export default async function AffiliateReportPage({
         <form action={sendReportAction}>
           <input type="hidden" name="code" value={affiliate.code} />
           <input type="hidden" name="month" value={monthKey} />
-          <button type="submit" style={buttonStyle}>
+          <SubmitButton pendingLabel="Sending..." style={buttonStyle}>
             Email report to {affiliate.email}
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 

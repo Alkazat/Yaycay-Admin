@@ -1,5 +1,6 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listJobs } from '@/lib/data';
 import { usageByTripDay, DAILY_CAP } from '@/lib/jobs/cap';
 import type { AiJobStatus } from '@/lib/contracts/types';
@@ -78,8 +79,8 @@ export default async function JobsPage() {
             {j.status === 'failed' ? (
               <form action={retryAction} style={{ marginLeft: 'auto' }}>
                 <input type="hidden" name="id" value={j.id} />
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingLabel="Retrying..."
                   style={{
                     minHeight: 'var(--tap-min)',
                     padding: '0 var(--space-4)',
@@ -93,7 +94,7 @@ export default async function JobsPage() {
                   }}
                 >
                   Retry
-                </button>
+                </SubmitButton>
               </form>
             ) : null}
           </div>
