@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { NoticeBanner } from '@/components/NoticeBanner';
 import { listAffiliates, listAffiliateRedemptions } from '@/lib/data';
 import { summarise } from '@/lib/affiliates/report';
 import { createAffiliateAction } from './actions';
@@ -16,7 +17,12 @@ const fieldStyle: React.CSSProperties = {
 /** Wide window so the list shows lifetime revenue regardless of server clock. */
 const ALL_TIME = { start: '0000-01-01', end: '9999-12-31' };
 
-export default async function AffiliatesPage() {
+export default async function AffiliatesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
+  const { notice } = await searchParams;
   const affiliates = await listAffiliates();
   const rows = await Promise.all(
     affiliates.map(async (affiliate) => ({
@@ -37,6 +43,7 @@ export default async function AffiliatesPage() {
       />
 
       <ApiStatusBanner />
+      <NoticeBanner notice={notice} />
 
       <Card title="Influencers">
         {rows.length === 0 ? (

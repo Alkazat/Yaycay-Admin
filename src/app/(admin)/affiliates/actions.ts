@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import {
   createAffiliate,
@@ -34,15 +35,17 @@ export async function createAffiliateAction(formData: FormData): Promise<void> {
     discountPercent,
     commissionPercent,
   });
-  if (created) {
-    await recordAudit({
-      actor: session.email,
-      action: 'affiliate.create',
-      target: created.code,
-      details: `${created.name} (${created.discountPercent}% / ${created.commissionPercent}%)`,
-    });
-    revalidatePath('/affiliates');
-  }
+  if (!created) redirect('/affiliates?notice=backend');
+  await recordAudit({
+    actor: session.email,
+    action: 'affiliate.create',
+    target: created.code,
+    details: `${created.name} (${created.discountPercent}% / ${created.commissionPercent}%)`,
+  });
+  revalidatePath('/affiliates');
+  redirect(
+    `/affiliates?notice=created&code=${encodeURIComponent(created.code)}`,
+  );
 }
 
 export async function setStatusAction(formData: FormData): Promise<void> {
@@ -52,16 +55,16 @@ export async function setStatusAction(formData: FormData): Promise<void> {
   if (!code || (status !== 'active' && status !== 'paused')) return;
 
   const updated = await setAffiliateStatus(code, status);
-  if (updated) {
-    await recordAudit({
-      actor: session.email,
-      action: 'affiliate.status',
-      target: code,
-      details: status,
-    });
-    revalidatePath('/affiliates');
-    revalidatePath(`/affiliates/${code}`);
-  }
+  if (!updated) redirect(`/affiliates/${code}?notice=backend`);
+  await recordAudit({
+    actor: session.email,
+    action: 'affiliate.status',
+    target: code,
+    details: status,
+  });
+  revalidatePath('/affiliates');
+  revalidatePath(`/affiliates/${code}`);
+  redirect(`/affiliates/${code}?notice=status`);
 }
 
 /**
@@ -83,13 +86,13 @@ export async function sendReportAction(formData: FormData): Promise<void> {
   const report = summarise(affiliate, redemptions, period);
 
   const result = await sendAffiliateReport(code, report, affiliate.email);
-  if (result.sent) {
-    await recordAudit({
-      actor: session.email,
-      action: 'affiliate.report-send',
-      target: code,
-      details: `${report.periodStart}..${report.periodEnd} -> ${affiliate.email} (owed $${report.commissionOwedUsd.toFixed(2)})`,
-    });
-    revalidatePath(`/affiliates/${code}`);
-  }
+  if (!result.sent) redirect(`/affiliates/${code}?notice=backend`);
+  await recordAudit({
+    actor: session.email,
+    action: 'affiliate.report-send',
+    target: code,
+    details: `${report.periodStart}..${report.periodEnd} -> ${affiliate.email} (owed $${report.commissionOwedUsd.toFixed(2)})`,
+  });
+  revalidatePath(`/affiliates/${code}`);
+  redirect(`/affiliates/${code}?notice=sent`);
 }
