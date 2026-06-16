@@ -52,6 +52,14 @@ export type {
   ProductKind,
   CreateProductRequest,
   UpdateProductRequest,
+  // Affiliate / influencer program (contract v0.16+, adopted at ^0.27.0).
+  AffiliateStatus,
+  Affiliate,
+  CreateAffiliateInput,
+  AffiliateRedemption,
+  AffiliateReportRequest,
+  AffiliatePage,
+  AffiliateRedemptionPage,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -81,63 +89,16 @@ export interface AdminAccount {
   createdAt?: string;
 }
 
-/* --------------------------------------------------------------------------
- * Pending contract: affiliate / influencer program.
+/**
+ * A period summary of an affiliate's revenue and the commission we owe them.
  *
- * Admin owns the operator surface for the influencer program (create a code,
- * see attributed revenue, send a monthly report). The DTOs below are local
- * stand-ins until BE adds them to @alkazat/contracts - see
- * docs/HANDOFF-affiliate-program-BE.md for the endpoints + Stripe coupon and
- * attribution work this depends on. Same precedent as AdminAccount above.
- * ------------------------------------------------------------------------ */
-
-export type AffiliateStatus = 'active' | 'paused';
-
-/** An influencer in the affiliate program. */
-export interface Affiliate {
-  id: string;
-  /** Influencer's name (shown on the report). */
-  name: string;
-  /** Where the monthly report is emailed. */
-  email: string;
-  /** Social handle, e.g. "@sunnytravels". */
-  handle: string;
-  /** Discount + attribution code a customer enters at checkout, e.g. "SUNNY15". */
-  code: string;
-  /** Customer-facing discount the code applies, as a percentage. */
-  discountPercent: number;
-  /** What we pay the influencer on net revenue, as a percentage. */
-  commissionPercent: number;
-  /** URL-safe slug for the Website affiliate landing page (/go/<slug>). */
-  landingSlug: string;
-  status: AffiliateStatus;
-  createdAt: string;
-}
-
-/** Request body for creating an affiliate (code + slug are derived server-side). */
-export interface CreateAffiliateInput {
-  name: string;
-  email: string;
-  handle: string;
-  discountPercent: number;
-  commissionPercent: number;
-}
-
-/** A single purchase attributed to an affiliate code (from the Stripe webhook). */
-export interface AffiliateRedemption {
-  purchaseId: string;
-  ownerEmail: string;
-  priceId: string;
-  /** List price before the discount. */
-  grossUsd: number;
-  /** Discount the code applied. */
-  discountUsd: number;
-  /** What the customer actually paid (gross - discount). */
-  netUsd: number;
-  createdAt: string;
-}
-
-/** A period summary of an affiliate's revenue and the commission we owe them. */
+ * Retained locally on purpose: this is an Admin-computed VIEW-MODEL (built by
+ * `src/lib/affiliates/report.ts` to render the on-screen totals and the email
+ * preview), not a BE DTO. The affiliate DTOs themselves (Affiliate,
+ * CreateAffiliateInput, AffiliateRedemption, the *Page envelopes,
+ * AffiliateReportRequest) now come from @alkazat/contracts; BE owns the actual
+ * report send via Brevo (POST /admin/affiliates/{code}/report).
+ */
 export interface AffiliateReport {
   affiliateCode: string;
   influencer: string;
