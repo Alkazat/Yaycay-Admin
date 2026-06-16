@@ -1,4 +1,5 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { SubmitButton } from '@/components/SubmitButton';
 import { getAdminMe, listAdmins } from '@/lib/data';
 import { isAdminDataLive } from '@/lib/config';
 import { promoteAction } from './actions';
@@ -68,9 +69,9 @@ export default async function AdminsPage() {
             placeholder="person@example.com"
             style={inputStyle}
           />
-          <button type="submit" style={buttonStyle}>
+          <SubmitButton pendingLabel="Promoting..." style={buttonStyle}>
             Promote to admin
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 

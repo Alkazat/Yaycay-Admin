@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listReviewItems } from '@/lib/data';
 import type { ReviewStatus } from '@/lib/contracts/types';
 import { approveAction } from './actions';
@@ -64,9 +65,9 @@ export default async function ContentReviewPage() {
               <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
                 <form action={approveAction}>
                   <input type="hidden" name="tripId" value={item.tripId} />
-                  <button type="submit" style={buttonStyle}>
+                  <SubmitButton pendingLabel="Approving..." style={buttonStyle}>
                     Approve
-                  </button>
+                  </SubmitButton>
                 </form>
                 <Link
                   href={`/content-review/${item.tripId}/edit`}

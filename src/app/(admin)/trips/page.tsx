@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { searchTrips } from '@/lib/data';
 
 const inputStyle: React.CSSProperties = {
@@ -39,8 +40,8 @@ export default async function TripsPage({
             placeholder="destination, owner email, or trip id"
             style={inputStyle}
           />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Searching..."
             style={{
               minHeight: 'var(--tap-min)',
               padding: '0 var(--space-4)',
@@ -51,7 +52,7 @@ export default async function TripsPage({
             }}
           >
             Search
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 

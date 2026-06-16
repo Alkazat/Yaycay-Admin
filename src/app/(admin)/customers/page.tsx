@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { searchCustomers } from '@/lib/data';
 import { deletionRequestAction } from './actions';
 import { startSupportSessionAction } from '../support/actions';
@@ -41,8 +42,8 @@ export default async function CustomersPage({
             placeholder="email"
             style={inputStyle}
           />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Searching..."
             style={{
               minHeight: 'var(--tap-min)',
               padding: '0 var(--space-4)',
@@ -53,7 +54,7 @@ export default async function CustomersPage({
             }}
           >
             Search
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 
@@ -106,8 +107,8 @@ export default async function CustomersPage({
                       background: 'var(--surface)',
                     }}
                   />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingLabel="Starting..."
                     style={{
                       minHeight: 'var(--tap-min)',
                       padding: '0 var(--space-4)',
@@ -120,15 +121,15 @@ export default async function CustomersPage({
                     }}
                   >
                     Start support session
-                  </button>
+                  </SubmitButton>
                 </form>
                 {c.deletionRequested ? (
                   <Badge tone="alert">deletion requested</Badge>
                 ) : (
                   <form action={deletionRequestAction}>
                     <input type="hidden" name="userId" value={c.userId} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingLabel="Recording..."
                       style={{
                         minHeight: 'var(--tap-min)',
                         padding: '0 var(--space-4)',
@@ -141,7 +142,7 @@ export default async function CustomersPage({
                       }}
                     >
                       Request deletion
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
               </div>
