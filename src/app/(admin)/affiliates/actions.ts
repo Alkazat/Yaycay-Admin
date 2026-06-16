@@ -4,11 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import {
+  archiveAffiliate,
   createAffiliate,
   getAffiliate,
   listAffiliateRedemptions,
   sendAffiliateReport,
   setAffiliateStatus,
+  updateAffiliate,
 } from '@/lib/data';
 import { monthPeriodFromKey, summarise } from '@/lib/affiliates/report';
 import { recordAudit } from '@/lib/audit';
@@ -18,6 +20,12 @@ import type { AffiliateStatus } from '@/lib/contracts/types';
  * Affiliate-program writes. Each re-checks admin + MFA and records an audit
  * entry, the same deliberate-and-logged pattern as the other admin writes.
  */
+
+/** Query string for a failed write: the HTTP status + a trimmed BE detail. */
+function failQuery(status: number, detail: string): string {
+  const d = detail ? `&detail=${encodeURIComponent(detail.slice(0, 180))}` : '';
+  return `notice=backend&status=${status}${d}`;
+}
 
 export async function createAffiliateAction(formData: FormData): Promise<void> {
   const session = await requireAdmin();
@@ -36,7 +44,7 @@ export async function createAffiliateAction(formData: FormData): Promise<void> {
     commissionPercent,
   });
   if (!result.ok) {
-    redirect(`/affiliates?notice=backend&status=${result.status}`);
+    redirect(`/affiliates?${failQuery(result.status, result.detail)}`);
   }
   const created = result.value;
   await recordAudit({
@@ -49,6 +57,63 @@ export async function createAffiliateAction(formData: FormData): Promise<void> {
   redirect(
     `/affiliates?notice=created&code=${encodeURIComponent(created.code)}`,
   );
+}
+
+export async function updateAffiliateAction(formData: FormData): Promise<void> {
+  const session = await requireAdmin();
+  const currentCode = String(formData.get('currentCode') ?? '');
+  const name = String(formData.get('name') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim();
+  const handle = String(formData.get('handle') ?? '').trim();
+  const code = String(formData.get('code') ?? '')
+    .trim()
+    .toUpperCase();
+  const discountPercent = Number(formData.get('discountPercent') ?? 0);
+  const commissionPercent = Number(formData.get('commissionPercent') ?? 0);
+  if (!currentCode || !name || !email || !handle || !code) return;
+
+  const result = await updateAffiliate(currentCode, {
+    name,
+    email,
+    handle,
+    code,
+    discountPercent,
+    commissionPercent,
+  });
+  if (!result.ok) {
+    redirect(
+      `/affiliates/${currentCode}?${failQuery(result.status, result.detail)}`,
+    );
+  }
+  await recordAudit({
+    actor: session.email,
+    action: 'affiliate.update',
+    target: currentCode,
+    details: `-> ${result.value.code} (${result.value.discountPercent}% / ${result.value.commissionPercent}%)`,
+  });
+  revalidatePath('/affiliates');
+  revalidatePath(`/affiliates/${result.value.code}`);
+  redirect(`/affiliates/${result.value.code}?notice=updated`);
+}
+
+export async function archiveAffiliateAction(
+  formData: FormData,
+): Promise<void> {
+  const session = await requireAdmin();
+  const code = String(formData.get('code') ?? '');
+  if (!code) return;
+
+  const result = await archiveAffiliate(code);
+  if (!result.ok) {
+    redirect(`/affiliates/${code}?${failQuery(result.status, result.detail)}`);
+  }
+  await recordAudit({
+    actor: session.email,
+    action: 'affiliate.archive',
+    target: code,
+  });
+  revalidatePath('/affiliates');
+  redirect('/affiliates?notice=archived');
 }
 
 export async function setStatusAction(formData: FormData): Promise<void> {

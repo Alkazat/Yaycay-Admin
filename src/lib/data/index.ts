@@ -13,6 +13,7 @@ import type {
   AiModel,
   ChildProfile,
   CreateAffiliateInput,
+  UpdateAffiliateInput,
   CreateProductRequest,
   CustomerSummary,
   ModelRoute,
@@ -105,7 +106,10 @@ async function liveWrite<T>(
   } catch (e) {
     logAdminError(where, e);
     const status = e instanceof AdminApiError ? e.status : 0;
-    const detail = e instanceof AdminApiError ? e.message : String(e);
+    // Prefer the BE response body (e.detail) - it usually carries the real
+    // cause (problem+json) - falling back to the error message.
+    const detail =
+      e instanceof AdminApiError ? (e.detail ?? e.message) : String(e);
     return { ok: false, status, detail };
   }
 }
@@ -600,6 +604,57 @@ export async function setAffiliateStatus(
       ),
     null,
   );
+}
+
+/**
+ * Edit an affiliate's fields (PUT /admin/affiliates/{code}). Full set incl.
+ * discountPercent/code; BE recreates the Stripe coupon when those change. The
+ * URL uses the CURRENT code; the new code (if any) is in the body. Reports the
+ * HTTP status on failure so the UI can explain it.
+ */
+export async function updateAffiliate(
+  currentCode: string,
+  input: UpdateAffiliateInput,
+): Promise<WriteOutcome<Affiliate>> {
+  if (!isAdminDataLive()) {
+    const updated = devStore.updateAffiliate(currentCode, {
+      name: input.name,
+      email: input.email,
+      handle: input.handle,
+      discountPercent: input.discountPercent,
+      commissionPercent: input.commissionPercent,
+      code: input.code,
+    });
+    return updated
+      ? { ok: true, value: updated }
+      : { ok: false, status: 404, detail: 'affiliate not found (stub)' };
+  }
+  return liveWrite('updateAffiliate', () =>
+    adminApi.put<Affiliate>(
+      `/admin/affiliates/${encodeURIComponent(currentCode)}`,
+      input,
+    ),
+  );
+}
+
+/**
+ * Archive an affiliate (DELETE /admin/affiliates/{code}). Soft on the BE side:
+ * deactivates the code and hides it from the active list, but keeps the record
+ * and past redemptions for reporting. Reports the HTTP status on failure.
+ */
+export async function archiveAffiliate(
+  code: string,
+): Promise<WriteOutcome<{ archived: true }>> {
+  if (!isAdminDataLive()) {
+    const removed = devStore.removeAffiliate(code);
+    return removed
+      ? { ok: true, value: { archived: true } }
+      : { ok: false, status: 404, detail: 'affiliate not found (stub)' };
+  }
+  return liveWrite('archiveAffiliate', async () => {
+    await adminApi.del<void>(`/admin/affiliates/${encodeURIComponent(code)}`);
+    return { archived: true as const };
+  });
 }
 
 /** Purchases attributed to an affiliate code (GET /admin/affiliates/{code}/redemptions). */
