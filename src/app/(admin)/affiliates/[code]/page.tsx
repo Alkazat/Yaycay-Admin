@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { NoticeBanner } from '@/components/NoticeBanner';
 import { getAffiliate, listAffiliateRedemptions } from '@/lib/data';
 import {
   monthPeriodFromKey,
@@ -26,10 +27,10 @@ export default async function AffiliateReportPage({
   searchParams,
 }: {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; notice?: string }>;
 }) {
   const { code } = await params;
-  const { month } = await searchParams;
+  const { month, notice } = await searchParams;
   const affiliate = await getAffiliate(code);
   if (!affiliate) notFound();
 
@@ -55,6 +56,8 @@ export default async function AffiliateReportPage({
       <p style={{ marginTop: 'calc(-1 * var(--space-4))' }}>
         <Link href="/affiliates">&lt;- All affiliates</Link>
       </p>
+
+      <NoticeBanner notice={notice} />
 
       <Card title="Program">
         <div

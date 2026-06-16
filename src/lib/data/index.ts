@@ -69,6 +69,25 @@ async function safe<T>(
 }
 
 /**
+ * Run a live WRITE; on a contract/API error (e.g. the endpoint is not deployed
+ * yet) log it and return the fallback instead of throwing. This keeps a server
+ * action from crashing the page with a 500 when BE has not built the endpoint;
+ * the caller treats the fallback as "not saved" and tells the user.
+ */
+async function safeWrite<T>(
+  where: string,
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    logAdminError(where, e);
+    return fallback;
+  }
+}
+
+/**
  * Liveness probe for the admin API. Returns ok, or the failing status so a
  * screen can show a clear diagnostic instead of a blank/empty page.
  */
@@ -528,11 +547,16 @@ export async function createAffiliate(
     devStore.addAffiliate(created);
     return created;
   }
-  return adminApi.post<Affiliate>('/admin/affiliates', {
-    ...input,
-    code,
-    landingSlug,
-  });
+  return safeWrite(
+    'createAffiliate',
+    () =>
+      adminApi.post<Affiliate>('/admin/affiliates', {
+        ...input,
+        code,
+        landingSlug,
+      }),
+    null,
+  );
 }
 
 /** Pause or reactivate an affiliate (PATCH /admin/affiliates/{code}). */
@@ -543,9 +567,16 @@ export async function setAffiliateStatus(
   if (!isAdminDataLive()) {
     return devStore.setAffiliateStatus(code, status) ?? null;
   }
-  return adminApi.patch<Affiliate>(
-    `/admin/affiliates/${encodeURIComponent(code)}`,
-    { status },
+  return safeWrite(
+    'setAffiliateStatus',
+    () =>
+      adminApi.patch<Affiliate>(
+        `/admin/affiliates/${encodeURIComponent(code)}`,
+        {
+          status,
+        },
+      ),
+    null,
   );
 }
 
@@ -578,11 +609,17 @@ export async function sendAffiliateReport(
   to: string,
 ): Promise<{ sent: boolean; to: string }> {
   if (!isAdminDataLive()) return { sent: true, to };
-  await adminApi.post(`/admin/affiliates/${encodeURIComponent(code)}/report`, {
-    periodStart: report.periodStart,
-    periodEnd: report.periodEnd,
-  });
-  return { sent: true, to };
+  return safeWrite<{ sent: boolean; to: string }>(
+    'sendAffiliateReport',
+    async () => {
+      await adminApi.post(
+        `/admin/affiliates/${encodeURIComponent(code)}/report`,
+        { periodStart: report.periodStart, periodEnd: report.periodEnd },
+      );
+      return { sent: true, to };
+    },
+    { sent: false, to },
+  );
 }
 
 // ===========================================================================
@@ -679,8 +716,13 @@ export async function revokeConnector(
   id: string,
 ): Promise<AdminConnector | null> {
   if (!isAdminDataLive()) return devStore.revokeConnector(id) ?? null;
-  return adminApi.post<AdminConnector>(
-    `/admin/connectors/${encodeURIComponent(id)}/revoke`,
+  return safeWrite(
+    'revokeConnector',
+    () =>
+      adminApi.post<AdminConnector>(
+        `/admin/connectors/${encodeURIComponent(id)}/revoke`,
+      ),
+    null,
   );
 }
 

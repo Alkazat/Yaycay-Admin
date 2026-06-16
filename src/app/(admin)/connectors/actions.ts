@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { revokeConnector } from '@/lib/data';
 import { recordAudit } from '@/lib/audit';
@@ -16,13 +17,13 @@ export async function revokeConnectorAction(formData: FormData): Promise<void> {
   if (!id) return;
 
   const updated = await revokeConnector(id);
-  if (updated) {
-    await recordAudit({
-      actor: session.email,
-      action: 'connector.revoke',
-      target: id,
-      details: `${updated.assistant} for ${updated.ownerEmail}`,
-    });
-    revalidatePath('/connectors');
-  }
+  if (!updated) redirect('/connectors?notice=backend');
+  await recordAudit({
+    actor: session.email,
+    action: 'connector.revoke',
+    target: id,
+    details: `${updated.assistant} for ${updated.ownerEmail}`,
+  });
+  revalidatePath('/connectors');
+  redirect('/connectors?notice=revoked');
 }
