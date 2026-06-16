@@ -18,9 +18,33 @@ const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
   revoked: { tone: 'ok', text: 'Connector revoked.' },
 };
 
-export function NoticeBanner({ notice }: { notice?: string }) {
+/** Turn a failing HTTP status into a plain-language cause. */
+function statusHint(status?: string): string | null {
+  if (!status) return null;
+  const code = Number(status);
+  if (!code || Number.isNaN(code)) {
+    return 'could not reach the API (wrong base URL, or network/CORS)';
+  }
+  if (code === 401) return 'HTTP 401 - not signed in to the API';
+  if (code === 403)
+    return 'HTTP 403 - the admin token was rejected (role / MFA / scope)';
+  if (code === 404)
+    return 'HTTP 404 - the endpoint is not deployed at this API base';
+  if (code >= 500)
+    return `HTTP ${code} - the backend errored handling the request`;
+  return `HTTP ${code}`;
+}
+
+export function NoticeBanner({
+  notice,
+  status,
+}: {
+  notice?: string;
+  status?: string;
+}) {
   const message = notice ? MESSAGES[notice] : undefined;
   if (!message) return null;
+  const hint = message.tone === 'error' ? statusHint(status) : null;
   return (
     <Card>
       <p
@@ -31,6 +55,7 @@ export function NoticeBanner({ notice }: { notice?: string }) {
         }}
       >
         {message.text}
+        {hint ? <span style={{ fontWeight: 400 }}> ({hint})</span> : null}
       </p>
     </Card>
   );
