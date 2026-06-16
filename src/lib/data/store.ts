@@ -121,6 +121,21 @@ export const devStore = {
     found.status = status;
     return { ...found };
   },
+  updateAffiliate(
+    code: string,
+    patch: Partial<Affiliate>,
+  ): Affiliate | undefined {
+    const found = affiliates.find((a) => a.code === code);
+    if (!found) return undefined;
+    Object.assign(found, patch);
+    return { ...found };
+  },
+  removeAffiliate(code: string): boolean {
+    const i = affiliates.findIndex((a) => a.code === code);
+    if (i === -1) return false;
+    affiliates.splice(i, 1);
+    return true;
+  },
   getConnectors(): AdminConnector[] {
     return connectors.map((c) => ({ ...c }));
   },

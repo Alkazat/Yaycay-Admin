@@ -44,7 +44,7 @@ export class AdminApiError extends Error {
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: unknown,
 ): Promise<T> {
@@ -75,7 +75,9 @@ async function request<T>(
     const text = await res.text().catch(() => '');
     throw new AdminApiError(res.status, path, text.slice(0, 200));
   }
-  return (await res.json()) as T;
+  // Tolerate an empty body (e.g. 204 No Content from DELETE).
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const adminApi = {
@@ -83,6 +85,7 @@ export const adminApi = {
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
+  del: <T>(path: string) => request<T>('DELETE', path),
 };
 
 /** Standard `{ items, nextCursor }` page envelope from the admin lists. */

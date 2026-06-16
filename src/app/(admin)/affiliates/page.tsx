@@ -20,9 +20,9 @@ const ALL_TIME = { start: '0000-01-01', end: '9999-12-31' };
 export default async function AffiliatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; status?: string }>;
+  searchParams: Promise<{ notice?: string; status?: string; detail?: string }>;
 }) {
-  const { notice, status } = await searchParams;
+  const { notice, status, detail } = await searchParams;
   const affiliates = await listAffiliates();
   const rows = await Promise.all(
     affiliates.map(async (affiliate) => ({
@@ -43,7 +43,7 @@ export default async function AffiliatesPage({
       />
 
       <ApiStatusBanner />
-      <NoticeBanner notice={notice} status={status} />
+      <NoticeBanner notice={notice} status={status} detail={detail} />
 
       <Card title="Influencers">
         {rows.length === 0 ? (

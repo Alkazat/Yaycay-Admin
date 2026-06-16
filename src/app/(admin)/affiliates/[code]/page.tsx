@@ -8,7 +8,12 @@ import {
   renderReportEmail,
   summarise,
 } from '@/lib/affiliates/report';
-import { setStatusAction, sendReportAction } from '../actions';
+import {
+  setStatusAction,
+  sendReportAction,
+  updateAffiliateAction,
+  archiveAffiliateAction,
+} from '../actions';
 
 const buttonStyle: React.CSSProperties = {
   minHeight: 'var(--tap-min)',
@@ -22,15 +27,28 @@ const buttonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
+const fieldStyle: React.CSSProperties = {
+  minHeight: 'var(--tap-min)',
+  padding: '0 var(--space-3)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--surface)',
+};
+
 export default async function AffiliateReportPage({
   params,
   searchParams,
 }: {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ month?: string; notice?: string }>;
+  searchParams: Promise<{
+    month?: string;
+    notice?: string;
+    status?: string;
+    detail?: string;
+  }>;
 }) {
   const { code } = await params;
-  const { month, notice } = await searchParams;
+  const { month, notice, status, detail } = await searchParams;
   const affiliate = await getAffiliate(code);
   if (!affiliate) notFound();
 
@@ -57,7 +75,7 @@ export default async function AffiliateReportPage({
         <Link href="/affiliates">&lt;- All affiliates</Link>
       </p>
 
-      <NoticeBanner notice={notice} />
+      <NoticeBanner notice={notice} status={status} detail={detail} />
 
       <Card title="Program">
         <div
@@ -79,26 +97,146 @@ export default async function AffiliateReportPage({
           <span style={{ color: 'var(--muted)' }}>
             landing: <code>yaycay.ai/go/{affiliate.landingSlug}</code>
           </span>
-          <form action={setStatusAction} style={{ marginLeft: 'auto' }}>
-            <input type="hidden" name="code" value={affiliate.code} />
-            <input
-              type="hidden"
-              name="status"
-              value={affiliate.status === 'active' ? 'paused' : 'active'}
-            />
-            <button
-              type="submit"
-              style={{
-                ...buttonStyle,
-                background: 'var(--surface)',
-                color: 'var(--ink)',
-                border: '1px solid var(--border)',
-              }}
-            >
-              {affiliate.status === 'active' ? 'Pause' : 'Reactivate'}
-            </button>
-          </form>
+          <div
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              gap: 'var(--space-2)',
+            }}
+          >
+            <form action={setStatusAction}>
+              <input type="hidden" name="code" value={affiliate.code} />
+              <input
+                type="hidden"
+                name="status"
+                value={affiliate.status === 'active' ? 'paused' : 'active'}
+              />
+              <button
+                type="submit"
+                style={{
+                  ...buttonStyle,
+                  background: 'var(--surface)',
+                  color: 'var(--ink)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                {affiliate.status === 'active' ? 'Pause' : 'Reactivate'}
+              </button>
+            </form>
+            <form action={archiveAffiliateAction}>
+              <input type="hidden" name="code" value={affiliate.code} />
+              <button
+                type="submit"
+                style={{
+                  ...buttonStyle,
+                  background: 'var(--surface)',
+                  color: 'var(--alert)',
+                  border: '1px solid var(--alert)',
+                }}
+              >
+                Archive
+              </button>
+            </form>
+          </div>
         </div>
+      </Card>
+
+      <Card title="Edit affiliate">
+        <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+          Changing the discount or code recreates the Stripe coupon on the
+          backend (coupons are immutable). Commission and contact details edit
+          freely.
+        </p>
+        <form
+          action={updateAffiliateAction}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: 'var(--space-3)',
+            alignItems: 'end',
+          }}
+        >
+          <input type="hidden" name="currentCode" value={affiliate.code} />
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Name
+            </span>
+            <input
+              name="name"
+              required
+              defaultValue={affiliate.name}
+              style={fieldStyle}
+            />
+          </label>
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Report email
+            </span>
+            <input
+              name="email"
+              type="email"
+              required
+              defaultValue={affiliate.email}
+              style={fieldStyle}
+            />
+          </label>
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Handle
+            </span>
+            <input
+              name="handle"
+              required
+              defaultValue={affiliate.handle}
+              style={fieldStyle}
+            />
+          </label>
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Code (recreates coupon)
+            </span>
+            <input
+              name="code"
+              required
+              defaultValue={affiliate.code}
+              style={fieldStyle}
+            />
+          </label>
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Discount % (recreates coupon)
+            </span>
+            <input
+              name="discountPercent"
+              type="number"
+              min="0"
+              max="100"
+              required
+              defaultValue={affiliate.discountPercent}
+              style={fieldStyle}
+            />
+          </label>
+          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Commission %
+            </span>
+            <input
+              name="commissionPercent"
+              type="number"
+              min="0"
+              max="100"
+              required
+              defaultValue={affiliate.commissionPercent}
+              style={fieldStyle}
+            />
+          </label>
+          <button
+            type="submit"
+            style={{ ...fieldStyle, cursor: 'pointer', fontWeight: 700 }}
+          >
+            Save changes
+          </button>
+        </form>
       </Card>
 
       <Card title="Monthly report">
