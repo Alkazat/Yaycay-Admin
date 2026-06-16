@@ -14,6 +14,8 @@ const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
   },
   created: { tone: 'ok', text: 'Affiliate created.' },
   status: { tone: 'ok', text: 'Affiliate status updated.' },
+  updated: { tone: 'ok', text: 'Affiliate updated.' },
+  archived: { tone: 'ok', text: 'Affiliate archived.' },
   sent: { tone: 'ok', text: 'Report sent to the influencer.' },
   revoked: { tone: 'ok', text: 'Connector revoked.' },
 };
@@ -38,13 +40,16 @@ function statusHint(status?: string): string | null {
 export function NoticeBanner({
   notice,
   status,
+  detail,
 }: {
   notice?: string;
   status?: string;
+  detail?: string;
 }) {
   const message = notice ? MESSAGES[notice] : undefined;
   if (!message) return null;
   const hint = message.tone === 'error' ? statusHint(status) : null;
+  const showDetail = message.tone === 'error' && detail;
   return (
     <Card>
       <p
@@ -57,6 +62,19 @@ export function NoticeBanner({
         {message.text}
         {hint ? <span style={{ fontWeight: 400 }}> ({hint})</span> : null}
       </p>
+      {showDetail ? (
+        <p
+          style={{
+            margin: 'var(--space-2) 0 0',
+            fontSize: '0.8rem',
+            color: 'var(--muted)',
+            fontFamily: 'var(--font-body)',
+            wordBreak: 'break-word',
+          }}
+        >
+          Backend said: {detail}
+        </p>
+      ) : null}
     </Card>
   );
 }

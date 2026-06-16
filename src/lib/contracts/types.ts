@@ -94,6 +94,22 @@ export interface AdminAccount {
 }
 
 /**
+ * Pending contract: edit an existing affiliate. The full set of editable
+ * fields; changing `discountPercent`/`code` requires BE to recreate the Stripe
+ * coupon (coupons are immutable). Local stand-in until BE publishes an update
+ * DTO + endpoint - see docs/HANDOFF-affiliate-edit-archive-BE.md. (Archive is a
+ * DELETE, no body.)
+ */
+export interface UpdateAffiliateInput {
+  name: string;
+  email: string;
+  handle: string;
+  discountPercent: number;
+  commissionPercent: number;
+  code: string;
+}
+
+/**
  * A period summary of an affiliate's revenue and the commission we owe them.
  *
  * Retained locally on purpose: this is an Admin-computed VIEW-MODEL (built by
