@@ -1,5 +1,6 @@
 import { PageHeader, Card, Stat, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { NoticeBanner } from '@/components/NoticeBanner';
 import { listConnectors } from '@/lib/data';
 import { summariseConnectors, daysSince } from '@/lib/connectors/summary';
 import { revokeConnectorAction } from './actions';
@@ -24,9 +25,9 @@ function lastUsedLabel(lastUsedAt: string | null, now: string): string {
 export default async function ConnectorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; notice?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, notice } = await searchParams;
   const { items } = await listConnectors({ query: q });
   const now = new Date().toISOString();
   const summary = summariseConnectors(items, now);
@@ -39,6 +40,7 @@ export default async function ConnectorsPage({
       />
 
       <ApiStatusBanner />
+      <NoticeBanner notice={notice} />
 
       <div
         style={{
