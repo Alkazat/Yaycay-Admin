@@ -10,7 +10,7 @@ import { Card } from '@/components/ui';
 const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
   backend: {
     tone: 'error',
-    text: "Couldn't save - the backend for this feature is not connected yet (endpoints pending). Nothing was changed.",
+    text: "Couldn't save - the request did not go through, so nothing was changed. Try again; if it persists, the backend endpoint may be unavailable or not deployed yet.",
   },
   created: { tone: 'ok', text: 'Affiliate created.' },
   status: { tone: 'ok', text: 'Affiliate status updated.' },

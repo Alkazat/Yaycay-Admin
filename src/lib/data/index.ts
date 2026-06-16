@@ -495,9 +495,11 @@ export async function createProduct(
 // ===========================================================================
 // Affiliate / influencer program
 //
-// Operator surface for the influencer program. The BE endpoints are pending
-// (docs/HANDOFF-affiliate-program-BE.md); until they land these serve the stub
-// layer, and reads fail soft to empty like every other admin read.
+// Operator surface for the influencer program. LIVE: the five /admin/affiliates*
+// endpoints shipped in @alkazat/contracts v0.16 (pinned ^0.27.0). When
+// NEXT_PUBLIC_API_BASE is set these call BE; otherwise they serve the stub
+// layer. Reads fail soft to empty; writes fail soft (safeWrite) so a transient
+// error shows a notice instead of crashing the page.
 // ===========================================================================
 
 export async function listAffiliates(): Promise<Affiliate[]> {
