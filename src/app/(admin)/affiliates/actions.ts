@@ -28,14 +28,17 @@ export async function createAffiliateAction(formData: FormData): Promise<void> {
   const commissionPercent = Number(formData.get('commissionPercent') ?? 0);
   if (!name || !email || !handle) return;
 
-  const created = await createAffiliate({
+  const result = await createAffiliate({
     name,
     email,
     handle,
     discountPercent,
     commissionPercent,
   });
-  if (!created) redirect('/affiliates?notice=backend');
+  if (!result.ok) {
+    redirect(`/affiliates?notice=backend&status=${result.status}`);
+  }
+  const created = result.value;
   await recordAudit({
     actor: session.email,
     action: 'affiliate.create',

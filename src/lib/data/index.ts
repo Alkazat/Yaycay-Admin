@@ -88,6 +88,29 @@ async function safeWrite<T>(
 }
 
 /**
+ * Result of a live write that wants to report WHY it failed (so the UI can show
+ * the HTTP status instead of a generic "didn't go through"). `status` is the
+ * HTTP code, or 0 when the API base could not be reached at all.
+ */
+export type WriteOutcome<T> =
+  | { ok: true; value: T }
+  | { ok: false; status: number; detail: string };
+
+async function liveWrite<T>(
+  where: string,
+  fn: () => Promise<T>,
+): Promise<WriteOutcome<T>> {
+  try {
+    return { ok: true, value: await fn() };
+  } catch (e) {
+    logAdminError(where, e);
+    const status = e instanceof AdminApiError ? e.status : 0;
+    const detail = e instanceof AdminApiError ? e.message : String(e);
+    return { ok: false, status, detail };
+  }
+}
+
+/**
  * Liveness probe for the admin API. Returns ok, or the failing status so a
  * screen can show a clear diagnostic instead of a blank/empty page.
  */
@@ -530,7 +553,7 @@ export async function getAffiliate(code: string): Promise<Affiliate | null> {
  */
 export async function createAffiliate(
   input: CreateAffiliateInput,
-): Promise<Affiliate | null> {
+): Promise<WriteOutcome<Affiliate>> {
   const code = suggestCode(input.handle, input.discountPercent);
   const landingSlug = suggestLandingSlug(input.handle);
   if (!isAdminDataLive()) {
@@ -547,17 +570,14 @@ export async function createAffiliate(
       createdAt: new Date().toISOString(),
     };
     devStore.addAffiliate(created);
-    return created;
+    return { ok: true, value: created };
   }
-  return safeWrite(
-    'createAffiliate',
-    () =>
-      adminApi.post<Affiliate>('/admin/affiliates', {
-        ...input,
-        code,
-        landingSlug,
-      }),
-    null,
+  return liveWrite('createAffiliate', () =>
+    adminApi.post<Affiliate>('/admin/affiliates', {
+      ...input,
+      code,
+      landingSlug,
+    }),
   );
 }
 
