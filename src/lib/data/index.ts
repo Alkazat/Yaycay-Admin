@@ -682,9 +682,11 @@ export async function getSupportSessionSnapshot(
 // ===========================================================================
 // BYO-AI MCP connectors (Connected assistants)
 //
-// Cross-account ops view of the OAuth grants behind the FE's MCP server. The
-// BE endpoints are pending (docs/HANDOFF-connectors-admin-BE.md); until they
-// land these serve the stub layer, and the list read fails soft to empty.
+// Cross-account ops view of the OAuth grants behind the FE's MCP server. LIVE:
+// GET /admin/connectors + POST /admin/connectors/{id}/revoke shipped in
+// @alkazat/contracts (pinned ^0.27.0). When NEXT_PUBLIC_API_BASE is set these
+// call BE; otherwise they serve stubs. The list read fails soft to empty;
+// revoke fails soft (safeWrite) so a transient error shows a notice, not a 500.
 // ===========================================================================
 
 /** List connected assistants, optionally filtered by owner email / assistant. */
