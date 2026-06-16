@@ -1,4 +1,5 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listPrompts } from '@/lib/data';
 import { groupByTask } from '@/lib/prompts/versioning';
 import { activateAction } from './actions';
@@ -51,8 +52,8 @@ export default async function PromptsPage() {
                       ) : (
                         <form action={activateAction}>
                           <input type="hidden" name="id" value={v.id} />
-                          <button
-                            type="submit"
+                          <SubmitButton
+                            pendingLabel="Activating..."
                             style={{
                               minHeight: 'var(--tap-min)',
                               padding: '0 var(--space-4)',
@@ -63,7 +64,7 @@ export default async function PromptsPage() {
                             }}
                           >
                             Activate
-                          </button>
+                          </SubmitButton>
                         </form>
                       )}
                     </td>

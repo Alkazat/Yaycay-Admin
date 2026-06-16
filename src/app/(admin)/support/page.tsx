@@ -1,5 +1,6 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import {
   listSupportSessions,
   getSupportSessionSnapshot,
@@ -40,7 +41,10 @@ const endBtn: React.CSSProperties = {
 };
 
 function minutesLeft(expiresAt: string): number {
-  return Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 60000));
+  return Math.max(
+    0,
+    Math.round((new Date(expiresAt).getTime() - Date.now()) / 60000),
+  );
 }
 
 export default async function SupportPage() {
@@ -61,18 +65,15 @@ export default async function SupportPage() {
 
       <Card>
         <p style={{ margin: 0, color: 'var(--muted)' }}>
-          A support session lets you inspect <strong>one</strong> customer&apos;s
-          account for a short window. It is <strong>read-only</strong> and every
-          look is logged to the audit trail. No customer login link, token, or
-          cookie is ever issued, and you cannot act as the customer.
+          A support session lets you inspect <strong>one</strong>{' '}
+          customer&apos;s account for a short window. It is{' '}
+          <strong>read-only</strong> and every look is logged to the audit
+          trail. No customer login link, token, or cookie is ever issued, and
+          you cannot act as the customer.
         </p>
       </Card>
 
-      {mine && snapshot ? (
-        <ActiveSession snapshot={snapshot} />
-      ) : (
-        <StartForm />
-      )}
+      {mine && snapshot ? <ActiveSession snapshot={snapshot} /> : <StartForm />}
     </>
   );
 }
@@ -101,9 +102,9 @@ function StartForm() {
           required
           style={inputStyle}
         />
-        <button type="submit" style={primaryBtn}>
+        <SubmitButton pendingLabel="Starting..." style={primaryBtn}>
           Start session
-        </button>
+        </SubmitButton>
       </form>
       <p
         style={{
@@ -112,8 +113,8 @@ function StartForm() {
           fontSize: '0.85rem',
         }}
       >
-        Sessions default to 30 minutes and expire automatically. You may hold one
-        open session at a time.
+        Sessions default to 30 minutes and expire automatically. You may hold
+        one open session at a time.
       </p>
     </Card>
   );
@@ -146,14 +147,11 @@ function ActiveSession({
           <span style={{ color: 'var(--muted)' }}>
             expires in {remaining} min
           </span>
-          <form
-            action={endSupportSessionAction}
-            style={{ marginLeft: 'auto' }}
-          >
+          <form action={endSupportSessionAction} style={{ marginLeft: 'auto' }}>
             <input type="hidden" name="id" value={session.id} />
-            <button type="submit" style={endBtn}>
+            <SubmitButton pendingLabel="Ending..." style={endBtn}>
               End session
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </Card>
@@ -197,9 +195,7 @@ function ActiveSession({
                 ) : null}
                 {p.medical && p.medical.length > 0 ? (
                   <span style={{ marginLeft: 'var(--space-2)' }}>
-                    <Badge tone="alert">
-                      medical: {p.medical.join(', ')}
-                    </Badge>
+                    <Badge tone="alert">medical: {p.medical.join(', ')}</Badge>
                   </span>
                 ) : null}
               </li>

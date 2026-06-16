@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
 import { NoticeBanner } from '@/components/NoticeBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listAffiliates, listAffiliateRedemptions } from '@/lib/data';
 import { summarise } from '@/lib/affiliates/report';
 import { createAffiliateAction } from './actions';
@@ -191,12 +192,12 @@ export default async function AffiliatesPage({
               style={fieldStyle}
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Adding..."
             style={{ ...fieldStyle, cursor: 'pointer', fontWeight: 700 }}
           >
             Add affiliate
-          </button>
+          </SubmitButton>
         </form>
       </Card>
     </>

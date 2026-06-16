@@ -1,5 +1,6 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { SubmitButton } from '@/components/SubmitButton';
 import { listProducts, listPurchases } from '@/lib/data';
 import { createProductAction } from './actions';
 
@@ -156,12 +157,12 @@ export default async function CommercePage() {
               style={fieldStyle}
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Adding..."
             style={{ ...fieldStyle, cursor: 'pointer', fontWeight: 700 }}
           >
             Add product
-          </button>
+          </SubmitButton>
         </form>
       </Card>
 
