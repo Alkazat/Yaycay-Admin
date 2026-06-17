@@ -1,5 +1,13 @@
 # Contract status: Admin dependencies on `@alkazat/contracts`
 
+> **As of 2026-06-16: all admin-scoped endpoints are LIVE on prod.** Admin is
+> pinned to `@alkazat/contracts@^0.27.0` with the affiliate + connector DTOs
+> adopted from the package. Affiliates (create/list/detail/pause/edit/archive/
+> redemptions/report), connectors (list/revoke), jobs, products, customers,
+> content-review and support sessions all run against live BE. Remaining tail:
+> the contract has not yet published `UpdateAffiliateInput`, so Admin keeps that
+> one local stand-in until the next contract bump.
+
 Tracks what the Admin app needs from BE (the contract owner) and what has
 landed. Until an endpoint is live, the matching data accessor in
 `src/lib/data/index.ts` falls back to the local stub layer via `notWiredYet`.
@@ -96,12 +104,12 @@ can surface them once they land in the admin contract.
 These were built against fields already in the contract, so they light up with
 real data the moment `NEXT_PUBLIC_API_BASE` is set; no BE work required.
 
-| Feature             | Where                                  | Uses                                            |
-| ------------------- | -------------------------------------- | ----------------------------------------------- |
-| Persona labels      | trip inspector profile badges          | `ChildProfile.mode` -> friendly name + emoji    |
-| Safety roll-up      | trip inspector                         | profile `dietary`/`medical` + activity `safety` |
-| Persona coverage    | trip inspector                         | `activity.variants` vs each child's `mode`      |
-| API status banner   | every list screen + dashboard          | the `/admin/jobs` liveness probe                |
+| Feature           | Where                         | Uses                                            |
+| ----------------- | ----------------------------- | ----------------------------------------------- |
+| Persona labels    | trip inspector profile badges | `ChildProfile.mode` -> friendly name + emoji    |
+| Safety roll-up    | trip inspector                | profile `dietary`/`medical` + activity `safety` |
+| Persona coverage  | trip inspector                | `activity.variants` vs each child's `mode`      |
+| API status banner | every list screen + dashboard | the `/admin/jobs` liveness probe                |
 
 ## Wiring procedure (per endpoint, once live)
 
