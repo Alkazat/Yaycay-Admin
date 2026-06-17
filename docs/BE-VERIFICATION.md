@@ -1,5 +1,11 @@
 # Yaycay-BE - Admin verification & gap checklist
 
+> **RESOLVED (2026-06-16).** The gaps tracked below are closed: `/admin/jobs`
+> returns 200, `/admin/products` is scoped to the deployment's Stripe mode with
+> `livemode`, profile dietary/medical flags are in the contract, and the whole
+> `/admin/*` surface is live on `@alkazat/contracts@^0.27.0`. Superseded by
+> `docs/BE-COMPLETION-CHECK.md`. Kept for history.
+
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE.
 
 The Admin console is deployed, signed-in (Supabase JWT, `role=admin` + AAL2),
@@ -58,11 +64,11 @@ use the `{ items, nextCursor }` envelope.
 
 The Admin UI already renders these; they light up once BE adds the fields.
 
-| Confirmed | Type                | Add field(s)                             | Why                                                                          |
-| --------- | ------------------- | ---------------------------------------- | ---------------------------------------------------------------------------- |
-| [ ]       | `ProductSummary`    | `livemode: boolean`                      | Commerce shows a Live/Test badge so a mode mix can't look like real pricing. |
-| [ ]       | `PurchaseSummary`   | `livemode: boolean`                      | Same, for purchases.                                                         |
-| [ ]       | `AdminChildProfile` | `dietary: string[]`, `medical: string[]` | Profiles view surfaces safety flags (allergy/EpiPen) for troubleshooting.    |
+| Confirmed | Type                                 | Add field(s)                                                      | Why                                                                                                                                                                                                                                       |
+| --------- | ------------------------------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ ]       | `ProductSummary`                     | `livemode: boolean`                                               | Commerce shows a Live/Test badge so a mode mix can't look like real pricing.                                                                                                                                                              |
+| [ ]       | `PurchaseSummary`                    | `livemode: boolean`                                               | Same, for purchases.                                                                                                                                                                                                                      |
+| [ ]       | `AdminChildProfile`                  | `dietary: string[]`, `medical: string[]`                          | Profiles view surfaces safety flags (allergy/EpiPen) for troubleshooting.                                                                                                                                                                 |
 | [ ]       | `ChildProfile` / `AdminChildProfile` | `type: 'child' \| 'parent_carer'`, `pin_set: boolean` (read-only) | User Types & Access handoff (2026-06-13). Admin profile view will badge the profile type and whether a parent/carer PIN is set. **Now in `AdminChildProfile` as of contract v0.17; queued in Admin pending the re-pin** - see note below. |
 
 ---

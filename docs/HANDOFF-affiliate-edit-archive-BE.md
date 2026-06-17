@@ -1,5 +1,12 @@
 # Handoff to Yaycay-BE: edit + archive an affiliate
 
+> **STATUS: SHIPPED & LIVE (2026-06-16).** `PUT /admin/affiliates/{code}` (edit,
+> with coupon recreate) and `DELETE /admin/affiliates/{code}` (soft archive) are
+> deployed; Admin's Edit/Archive buttons now succeed against prod. One tail:
+> the contract hasn't published `UpdateAffiliateInput` yet (still on 0.27.0), so
+> Admin keeps a local stand-in for that body type until the next bump. Kept for
+> history.
+
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
 **Context:** affiliates are live (create / list / get / PATCH-status / redemptions
 / report). Admin now has **Edit** and **Archive** UI on `/affiliates/{code}`,
@@ -7,6 +14,7 @@ but they need two new endpoints. Until they ship, those buttons fail soft and
 show the HTTP status (e.g. "HTTP 404 - endpoint not deployed").
 
 Operator decisions already made (so build to these):
+
 - **Archive, not hard delete.** Removing keeps the record + past redemptions for
   reporting; it just deactivates the code and drops it from the active list.
 - **Full edit, incl. discount % and code.** Changing those recreates the Stripe
@@ -29,6 +37,7 @@ interface UpdateAffiliateInput {
 ```
 
 Returns the updated `Affiliate` (200). Behaviour:
+
 - `name` / `email` / `handle` / `commissionPercent` -> plain row update (our data).
 - `discountPercent` or `code` changed -> **deactivate the old Stripe coupon and
   create a new one** for the new code/percent; keep historical redemptions
@@ -38,6 +47,7 @@ Returns the updated `Affiliate` (200). Behaviour:
 ## 2. Archive - `DELETE /admin/affiliates/{code}`
 
 Soft archive (200 or 204). Behaviour:
+
 - Mark the affiliate archived; **deactivate its Stripe promotion code** so it
   stops redeeming.
 - Exclude archived affiliates from the default `GET /admin/affiliates` list
@@ -58,6 +68,7 @@ follow. We assumed DELETE so the existing PATCH stays status-only.)
 - Admin records those audit actions locally already.
 
 ## Definition of done
+
 - `PUT` edits fields and recreates the coupon when discount/code change.
 - `DELETE` archives (soft), deactivates the coupon, hides from the active list,
   preserves redemptions.

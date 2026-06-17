@@ -1,5 +1,11 @@
 # Handoff to Yaycay-BE: affiliate / influencer program
 
+> **STATUS: SHIPPED & LIVE (2026-06-16).** All endpoints below are deployed on
+> prod and consumed by Admin against `@alkazat/contracts@^0.27.0`. The create
+> 500 (Stripe coupon-write key) is fixed (dedicated `STRIPE_COUPON_KEY` +
+> idempotent retry). Create / list / detail / pause / redemptions / report all
+> work end-to-end. Kept for history.
+
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
 **Status:** Admin operator UI is built and runs on stubs today. It goes live the
 moment the endpoints below exist and Admin re-pins `@alkazat/contracts`.
@@ -97,14 +103,14 @@ Also: add `discountCode?: string` and `discountUsd?: number` to the existing
 
 ## Endpoints (all under the existing `/admin/*` surface: `role=admin` + AAL2, audited)
 
-| Method + path                                | Body / query                | Returns                          | Notes |
-| -------------------------------------------- | --------------------------- | -------------------------------- | ----- |
-| `GET /admin/affiliates`                      | -                           | `{ items: Affiliate[], nextCursor }` | List. |
-| `POST /admin/affiliates`                     | `CreateAffiliateInput`      | `Affiliate` (201)                | Create the affiliate AND the Stripe coupon. Reject a duplicate `code` (409). You own uniqueness; the Admin-suggested `code`/`landingSlug` are derived from the handle + discount and may collide. |
-| `GET /admin/affiliates/{code}`               | -                           | `Affiliate`                      | Detail. |
-| `PATCH /admin/affiliates/{code}`             | `{ status }`                | `Affiliate`                      | Pause / reactivate. Pausing should disable the Stripe promo code so it stops redeeming. |
-| `GET /admin/affiliates/{code}/redemptions`   | `?cursor=&limit=`           | `{ items: AffiliateRedemption[], nextCursor }` | Attributed purchases. |
-| `POST /admin/affiliates/{code}/report`       | `{ periodStart, periodEnd }` (ISO dates) | `{ sent: true }`     | Render + send the monthly email via the transactional sender (Brevo) to the affiliate's email, and record it. Admin computes the same totals client-side for display but never sends the body; you are the source of truth for what gets emailed. |
+| Method + path                              | Body / query                             | Returns                                        | Notes                                                                                                                                                                                                                                             |
+| ------------------------------------------ | ---------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /admin/affiliates`                    | -                                        | `{ items: Affiliate[], nextCursor }`           | List.                                                                                                                                                                                                                                             |
+| `POST /admin/affiliates`                   | `CreateAffiliateInput`                   | `Affiliate` (201)                              | Create the affiliate AND the Stripe coupon. Reject a duplicate `code` (409). You own uniqueness; the Admin-suggested `code`/`landingSlug` are derived from the handle + discount and may collide.                                                 |
+| `GET /admin/affiliates/{code}`             | -                                        | `Affiliate`                                    | Detail.                                                                                                                                                                                                                                           |
+| `PATCH /admin/affiliates/{code}`           | `{ status }`                             | `Affiliate`                                    | Pause / reactivate. Pausing should disable the Stripe promo code so it stops redeeming.                                                                                                                                                           |
+| `GET /admin/affiliates/{code}/redemptions` | `?cursor=&limit=`                        | `{ items: AffiliateRedemption[], nextCursor }` | Attributed purchases.                                                                                                                                                                                                                             |
+| `POST /admin/affiliates/{code}/report`     | `{ periodStart, periodEnd }` (ISO dates) | `{ sent: true }`                               | Render + send the monthly email via the transactional sender (Brevo) to the affiliate's email, and record it. Admin computes the same totals client-side for display but never sends the body; you are the source of truth for what gets emailed. |
 
 ## Stripe coupon + attribution (the core of it)
 
