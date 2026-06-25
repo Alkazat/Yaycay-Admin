@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { ApiStatusBanner } from '@/components/ApiStatusBanner';
+import { NoticeBanner } from '@/components/NoticeBanner';
 import { SubmitButton } from '@/components/SubmitButton';
 import { searchCustomers } from '@/lib/data';
-import { deletionRequestAction } from './actions';
+import { deletionRequestAction, inviteUserAction } from './actions';
 import { startSupportSessionAction } from '../support/actions';
 
 const inputStyle: React.CSSProperties = {
@@ -18,9 +19,15 @@ const inputStyle: React.CSSProperties = {
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; cursor?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    cursor?: string;
+    notice?: string;
+    status?: string;
+    detail?: string;
+  }>;
 }) {
-  const { q, cursor } = await searchParams;
+  const { q, cursor, notice, status, detail } = await searchParams;
   const { items, nextCursor } = await searchCustomers({ query: q, cursor });
 
   const nextHref = nextCursor
@@ -38,6 +45,7 @@ export default async function CustomersPage({
         subtitle="Customer accounts: lookup, entitlement, retention status, support sessions and data-deletion requests."
       />
       <ApiStatusBanner />
+      <NoticeBanner notice={notice} status={status} detail={detail} />
       <Card>
         <form method="get" style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <input
@@ -58,6 +66,42 @@ export default async function CustomersPage({
             }}
           >
             Search
+          </SubmitButton>
+        </form>
+      </Card>
+
+      <Card title="Invite a user">
+        <p style={{ marginTop: 0, color: 'var(--muted)' }}>
+          Onboard someone manually: we provision a pending account and email
+          them a magic link to finish signing up (they set their own 2FA). No
+          password is set here - Yaycay logins are always magic-link + 2FA.
+        </p>
+        <form
+          action={inviteUserAction}
+          style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}
+        >
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="email"
+            style={inputStyle}
+          />
+          <input name="name" placeholder="name (optional)" style={inputStyle} />
+          <SubmitButton
+            pendingLabel="Inviting..."
+            style={{
+              minHeight: 'var(--tap-min)',
+              padding: '0 var(--space-4)',
+              border: '1px solid var(--brand-primary)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--surface)',
+              color: 'var(--brand-primary-deep)',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Send invite
           </SubmitButton>
         </form>
       </Card>
