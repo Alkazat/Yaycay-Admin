@@ -1,10 +1,18 @@
 # Handoff to Yaycay-BE: edit + archive an affiliate
 
-> **STATUS: SHIPPED & LIVE (2026-06-16).** `PUT /admin/affiliates/{code}` (edit,
-> with coupon recreate) and `DELETE /admin/affiliates/{code}` (soft archive) are
-> deployed; Admin's Edit/Archive buttons now succeed against prod. One tail:
-> the contract hasn't published `UpdateAffiliateInput` yet (still on 0.27.0), so
-> Admin keeps a local stand-in for that body type until the next bump. Kept for
+> **STATUS: SHIPPED & LIVE; CONTRACT RECONCILED (2026-06-25).**
+> `PUT /admin/affiliates/{code}` (edit) and `DELETE /admin/affiliates/{code}`
+> (soft archive) are deployed. `@alkazat/contracts@0.32.0` now publishes
+> `UpdateAffiliateInput`, and Admin has dropped its local stand-in for it.
+>
+> **Reconciliation note (supersedes the "full edit" decision below):** the
+> published `UpdateAffiliateInput` is `{ name?, email?, handle?,
+> commissionPercent?, landingSlug? }` - it deliberately EXCLUDES
+> `discountPercent` and `code` because those back an immutable Stripe coupon /
+> promotion code. Admin's edit form now edits only those five fields and shows
+> code + discount read-only with an "archive + recreate to change" pointer (the
+> archive flow mints a fresh coupon). The original "full edit incl. discount/code"
+> intent is satisfied via archive + recreate, not via the edit body. Kept for
 > history.
 
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
