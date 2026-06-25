@@ -4,8 +4,8 @@ import type { AdminSession } from '@/lib/contracts/types';
 
 /* The admin nav. Every entry maps to a screen from the handoff. */
 const NAV = [
-  { href: '/customers', label: 'Users' },
   { href: '/', label: 'Dashboard' },
+  { href: '/customers', label: 'Users' },
   { href: '/prompts', label: 'Prompts' },
   { href: '/models', label: 'Models' },
   { href: '/trips', label: 'Trips' },
