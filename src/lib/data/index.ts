@@ -14,6 +14,7 @@ import type {
   ChildProfile,
   CreateAffiliateInput,
   UpdateAffiliateInput,
+  InviteCustomerInput,
   CreateProductRequest,
   CustomerSummary,
   ModelRoute,
@@ -379,6 +380,29 @@ export async function requestCustomerDeletion(
   }
   return adminApi.post<CustomerSummary>(
     `/admin/customers/${userId}/deletion-request`,
+  );
+}
+
+/**
+ * Invite a customer / onboard them manually (POST /admin/customers/invite). BE
+ * provisions a pending account in the isolated identity store and emails a
+ * magic-link invite (no password set here). Reports the HTTP status on failure.
+ */
+export async function inviteCustomer(
+  input: InviteCustomerInput,
+): Promise<WriteOutcome<CustomerSummary>> {
+  if (!isAdminDataLive()) {
+    const created: CustomerSummary = {
+      userId: `u_${input.email}`,
+      email: input.email,
+      tier: null,
+      retentionExpiresAt: null,
+      deletionRequested: false,
+    };
+    return { ok: true, value: devStore.addCustomer(created) };
+  }
+  return liveWrite('inviteCustomer', () =>
+    adminApi.post<CustomerSummary>('/admin/customers/invite', input),
   );
 }
 
