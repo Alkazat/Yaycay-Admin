@@ -27,11 +27,15 @@ export default async function CustomersPage({
     ? `/customers?${new URLSearchParams({ ...(q ? { q } : {}), cursor: nextCursor })}`
     : null;
 
+  const heading = q
+    ? `${items.length} ${items.length === 1 ? 'match' : 'matches'} for "${q}"`
+    : `${items.length} customer account${items.length === 1 ? '' : 's'}`;
+
   return (
     <>
       <PageHeader
-        title="Customers"
-        subtitle="Account lookup, entitlement, retention status and data-deletion requests."
+        title="Users"
+        subtitle="Customer accounts: lookup, entitlement, retention status, support sessions and data-deletion requests."
       />
       <ApiStatusBanner />
       <Card>
@@ -39,7 +43,7 @@ export default async function CustomersPage({
           <input
             name="q"
             defaultValue={q ?? ''}
-            placeholder="email"
+            placeholder="search by email"
             style={inputStyle}
           />
           <SubmitButton
@@ -58,9 +62,23 @@ export default async function CustomersPage({
         </form>
       </Card>
 
+      <p
+        style={{
+          margin: 'var(--space-2) 0',
+          color: 'var(--muted)',
+          fontSize: '0.85rem',
+        }}
+      >
+        {heading}
+      </p>
+
       {items.length === 0 ? (
         <Card>
-          <p style={{ margin: 0 }}>No customers match.</p>
+          <p style={{ margin: 0 }}>
+            {q
+              ? `No users match "${q}".`
+              : 'No customer accounts yet. They appear here as people sign up in the app.'}
+          </p>
         </Card>
       ) : (
         items.map((c) => (
