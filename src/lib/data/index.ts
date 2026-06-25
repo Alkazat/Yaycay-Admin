@@ -21,6 +21,7 @@ import type {
   Prompt,
   Purchase,
   ReviewItem,
+  Role,
   TripContent,
   AdminTripSummary,
   StartSupportSessionInput,
@@ -473,16 +474,7 @@ export async function getAdminMe(): Promise<AdminSession | null> {
  * verification checklist; fails soft to [] live, stub list otherwise.
  */
 export async function listAdmins(): Promise<AdminAccount[]> {
-  if (!isAdminDataLive()) {
-    return [
-      {
-        userId: 'u_dev',
-        email: 'dyeates@dwhy.com.au',
-        role: 'admin',
-        createdAt: '2026-06-13T00:00:00Z',
-      },
-    ];
-  }
+  if (!isAdminDataLive()) return devStore.getAdmins();
   return safe(
     'listAdmins',
     async () =>
@@ -491,14 +483,24 @@ export async function listAdmins(): Promise<AdminAccount[]> {
   );
 }
 
-/** Promote an account to admin by email (POST /admin/admins). BE endpoint pending. */
-export async function promoteAdmin(
+/**
+ * Set an account's console role by email (POST /admin/admins) - role 'admin'
+ * promotes, role 'user' demotes (revokes admin). The account must already
+ * exist; an unknown email is a 404. Audited by the caller.
+ */
+export async function setAdminRole(
   email: string,
+  role: Role,
 ): Promise<AdminAccount | null> {
   if (!isAdminDataLive()) {
-    return { userId: `u_${email}`, email, role: 'admin' };
+    if (role === 'user') {
+      return devStore.removeAdmin(email);
+    }
+    const created: AdminAccount = { userId: `u_${email}`, email, role };
+    devStore.addAdminAccount(created);
+    return created;
   }
-  return adminApi.post<AdminAccount>('/admin/admins', { email, role: 'admin' });
+  return adminApi.post<AdminAccount>('/admin/admins', { email, role });
 }
 
 /** Create a catalogue product (POST /admin/products). Stamps the deploy's Stripe mode. */

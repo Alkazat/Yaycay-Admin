@@ -1,5 +1,10 @@
 # Handoff to Yaycay-BE: admin surface for BYO-AI MCP connectors
 
+> **STATUS: SHIPPED & LIVE (2026-06-16).** `GET /admin/connectors` + revoke are
+> deployed, and the cross-cutting asks (log `plan_trip` to `ai_jobs` with
+> `source=connector`; route connector content through Content Review) are
+> closed. The "Connected assistants" screen runs against prod. Kept for history.
+
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
 **Context:** Yaycay-FE shipped an OAuth-protected MCP server (see
 `08-MCP-CONNECTOR-HANDOFF.md`). Parents connect their own AI (Claude / ChatGPT /
@@ -28,11 +33,11 @@ type ConnectorScope = 'yaycay.read' | 'yaycay.plan';
 type ConnectorStatus = 'active' | 'revoked';
 
 interface AdminConnector {
-  id: string;            // grant id, used to revoke
+  id: string; // grant id, used to revoke
   userId: string;
   ownerEmail: string;
-  assistant: string;     // human label, e.g. "Claude (claude.ai)"
-  clientId: string;      // OAuth client id (RFC 7591 dynamic registration)
+  assistant: string; // human label, e.g. "Claude (claude.ai)"
+  clientId: string; // OAuth client id (RFC 7591 dynamic registration)
   scopes: ConnectorScope[];
   status: ConnectorStatus;
   createdAt: string;
@@ -42,10 +47,10 @@ interface AdminConnector {
 
 ## 3. Endpoints (under the existing `/admin/*`: role=admin + AAL2, audited)
 
-| Method + path                              | Returns                                  | Notes |
-| ------------------------------------------ | ---------------------------------------- | ----- |
-| `GET /admin/connectors?query=&cursor=`     | `{ items: AdminConnector[], nextCursor }`| `query` filters by owner email / assistant. A view over `oauth_grants`. |
-| `POST /admin/connectors/{id}/revoke`       | `AdminConnector` (status=revoked)        | Effective immediately (section 4). |
+| Method + path                          | Returns                                   | Notes                                                                   |
+| -------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /admin/connectors?query=&cursor=` | `{ items: AdminConnector[], nextCursor }` | `query` filters by owner email / assistant. A view over `oauth_grants`. |
+| `POST /admin/connectors/{id}/revoke`   | `AdminConnector` (status=revoked)         | Effective immediately (section 4).                                      |
 
 These map 1:1 to `listConnectors` / `revokeConnector` in
 `src/lib/data/index.ts`, which fail soft to stubs until live.
@@ -53,6 +58,7 @@ These map 1:1 to `listConnectors` / `revokeConnector` in
 ## 4. Revoke must actually cut access
 
 Revoking a grant must, server-side:
+
 1. mark the grant revoked,
 2. invalidate its access + refresh tokens, and
 3. ensure the next `/api/mcp` call with that grant fails auth.
