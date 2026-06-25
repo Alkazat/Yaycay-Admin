@@ -100,6 +100,19 @@ export interface UpdateAffiliateInput {
 }
 
 /**
+ * Pending contract: invite a customer (manual onboarding from Admin). BE
+ * provisions a pending account in the isolated identity store and emails a
+ * magic-link invite; no password is set here (auth is always magic-link + 2FA).
+ * Local stand-in until BE publishes the DTO + endpoint - see
+ * docs/HANDOFF-user-invite-BE.md.
+ */
+export interface InviteCustomerInput {
+  email: string;
+  /** Optional display name to greet them in the invite email. */
+  name?: string;
+}
+
+/**
  * A period summary of an affiliate's revenue and the commission we owe them.
  *
  * Retained locally on purpose: this is an Admin-computed VIEW-MODEL (built by

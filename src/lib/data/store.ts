@@ -90,6 +90,12 @@ export const devStore = {
   getCustomers(): CustomerSummary[] {
     return customers.map((c) => ({ ...c }));
   },
+  addCustomer(customer: CustomerSummary): CustomerSummary {
+    const existing = customers.find((c) => c.email === customer.email);
+    if (existing) return { ...existing };
+    customers.unshift({ ...customer });
+    return { ...customer };
+  },
   setDeletionRequested(
     userId: string,
     value: boolean,

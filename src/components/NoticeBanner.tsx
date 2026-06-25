@@ -18,6 +18,10 @@ const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
   archived: { tone: 'ok', text: 'Affiliate archived.' },
   sent: { tone: 'ok', text: 'Report sent to the influencer.' },
   revoked: { tone: 'ok', text: 'Connector revoked.' },
+  invited: {
+    tone: 'ok',
+    text: 'Invitation sent. The user gets a magic-link email to finish signing up.',
+  },
 };
 
 /** Turn a failing HTTP status into a plain-language cause. */
