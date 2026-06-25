@@ -633,24 +633,19 @@ export async function setAffiliateStatus(
 }
 
 /**
- * Edit an affiliate's fields (PUT /admin/affiliates/{code}). Full set incl.
- * discountPercent/code; BE recreates the Stripe coupon when those change. The
- * URL uses the CURRENT code; the new code (if any) is in the body. Reports the
- * HTTP status on failure so the UI can explain it.
+ * Edit an affiliate's non-Stripe fields (PUT /admin/affiliates/{code}). The
+ * contract (UpdateAffiliateInput) intentionally excludes `discountPercent` and
+ * `code`: those back an immutable Stripe coupon/promotion code, so changing the
+ * discount or code is done by archiving and recreating, not editing. Editable
+ * here: name, email, handle, commissionPercent, landingSlug. Reports the HTTP
+ * status on failure so the UI can explain it.
  */
 export async function updateAffiliate(
   currentCode: string,
   input: UpdateAffiliateInput,
 ): Promise<WriteOutcome<Affiliate>> {
   if (!isAdminDataLive()) {
-    const updated = devStore.updateAffiliate(currentCode, {
-      name: input.name,
-      email: input.email,
-      handle: input.handle,
-      discountPercent: input.discountPercent,
-      commissionPercent: input.commissionPercent,
-      code: input.code,
-    });
+    const updated = devStore.updateAffiliate(currentCode, input);
     return updated
       ? { ok: true, value: updated }
       : { ok: false, status: 404, detail: 'affiliate not found (stub)' };
