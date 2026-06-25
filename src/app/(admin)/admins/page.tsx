@@ -1,8 +1,7 @@
 import { PageHeader, Card, Badge } from '@/components/ui';
 import { SubmitButton } from '@/components/SubmitButton';
 import { getAdminMe, listAdmins } from '@/lib/data';
-import { isAdminDataLive } from '@/lib/config';
-import { promoteAction } from './actions';
+import { promoteAction, revokeAdminAction } from './actions';
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
@@ -29,7 +28,7 @@ export default async function AdminsPage() {
     <>
       <PageHeader
         title="Admins"
-        subtitle="Who can sign in to this console. Promoting an account grants the admin role; the change is audited."
+        subtitle="Who can sign in to this console. Promote an account to grant the admin role, or revoke to remove it. Every change is audited."
       />
 
       {me ? (
@@ -85,39 +84,60 @@ export default async function AdminsPage() {
                 <th style={{ padding: 'var(--space-2)' }}>Email</th>
                 <th style={{ padding: 'var(--space-2)' }}>Role</th>
                 <th style={{ padding: 'var(--space-2)' }}>Since</th>
+                <th style={{ padding: 'var(--space-2)' }} />
               </tr>
             </thead>
             <tbody>
-              {admins.map((a) => (
-                <tr
-                  key={a.userId}
-                  style={{ borderTop: '1px solid var(--border)' }}
-                >
-                  <td style={{ padding: 'var(--space-2)' }}>{a.email}</td>
-                  <td style={{ padding: 'var(--space-2)' }}>
-                    <Badge tone="info">{a.role}</Badge>
-                  </td>
-                  <td
-                    style={{ padding: 'var(--space-2)', color: 'var(--muted)' }}
+              {admins.map((a) => {
+                const isSelf = me?.email === a.email;
+                return (
+                  <tr
+                    key={a.userId}
+                    style={{ borderTop: '1px solid var(--border)' }}
                   >
-                    {a.createdAt ?? '-'}
-                  </td>
-                </tr>
-              ))}
+                    <td style={{ padding: 'var(--space-2)' }}>{a.email}</td>
+                    <td style={{ padding: 'var(--space-2)' }}>
+                      <Badge tone="info">{a.role}</Badge>
+                    </td>
+                    <td
+                      style={{
+                        padding: 'var(--space-2)',
+                        color: 'var(--muted)',
+                      }}
+                    >
+                      {a.createdAt ?? '-'}
+                    </td>
+                    <td style={{ padding: 'var(--space-2)' }}>
+                      {isSelf ? (
+                        <span style={{ color: 'var(--muted)' }}>(you)</span>
+                      ) : (
+                        <form action={revokeAdminAction}>
+                          <input type="hidden" name="email" value={a.email} />
+                          <SubmitButton
+                            pendingLabel="Revoking..."
+                            style={{
+                              minHeight: 'var(--tap-min)',
+                              padding: '0 var(--space-4)',
+                              border: '1px solid var(--alert)',
+                              borderRadius: 'var(--radius-sm)',
+                              background: 'var(--surface)',
+                              color: 'var(--alert)',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Revoke
+                          </SubmitButton>
+                        </form>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </Card>
-
-      {isAdminDataLive() ? (
-        <Card title="BE endpoint status">
-          <p style={{ margin: 0, color: 'var(--muted)' }}>
-            <code>GET/POST /admin/admins</code> may not be deployed yet. Until
-            it is, this list fails soft to empty and promotion is a no-op. See
-            the BE verification checklist.
-          </p>
-        </Card>
-      ) : null}
     </>
   );
 }

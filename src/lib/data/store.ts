@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type {
+  AdminAccount,
   AdminConnector,
   Affiliate,
   AffiliateStatus,
@@ -37,6 +38,14 @@ const connectors: AdminConnector[] = stubs.stubConnectors.map((c) => ({
 }));
 const audit: AuditEntry[] = [];
 const supportSessions: SupportSession[] = [];
+const admins: AdminAccount[] = [
+  {
+    userId: 'u_dev',
+    email: 'dyeates@dwhy.com.au',
+    role: 'admin',
+    createdAt: '2026-06-13T00:00:00Z',
+  },
+];
 
 function withActive(s: SupportSession): SupportSession {
   return {
@@ -144,6 +153,24 @@ export const devStore = {
     if (!found) return undefined;
     found.status = 'revoked';
     return { ...found };
+  },
+  getAdmins(): AdminAccount[] {
+    return admins.map((a) => ({ ...a }));
+  },
+  addAdminAccount(account: AdminAccount): AdminAccount {
+    const existing = admins.find((a) => a.email === account.email);
+    if (existing) {
+      existing.role = account.role;
+      return { ...existing };
+    }
+    admins.push({ ...account });
+    return { ...account };
+  },
+  removeAdmin(email: string): AdminAccount | null {
+    const i = admins.findIndex((a) => a.email === email);
+    if (i === -1) return null;
+    const [removed] = admins.splice(i, 1);
+    return { ...removed, role: 'user' };
   },
   getAudit(): AuditEntry[] {
     return audit.map((a) => ({ ...a }));
