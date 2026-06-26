@@ -2,10 +2,14 @@
 
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
 
-> **STATUS: Admin UI built and live in dev/preview against the in-memory store;
-> the whole workflow is testable now.** Live mode lights up as BE ships each
-> piece below. Until then, the new writes fail soft (show the HTTP status) and
-> the rich table columns render as null/0.
+> **STATUS (2026-06-26): BE IMPLEMENTED the endpoints; ONE item remains.**
+> The write endpoints and enriched read are deployed, and Admin consumes them:
+> the writes hit the exact paths below, and `searchUsers` reads the enriched
+> columns "ahead of contract" (prefers `GET /admin/users`, falls back to
+> `GET /admin/customers`, defaults any missing field). **Remaining:** publish the
+> DTOs in `@alkazat/contracts` (section 3) so Admin can swap the defensive read
+> for typed `AdminUserRow` and drop the local view-models. Until then everything
+> works live; it's just not yet a single typed source.
 
 Admin now treats the operator as a true administrator: invite, change email,
 manage trips, and a two-step GDPR deletion - all from `/customers` (Users) and
@@ -87,5 +91,3 @@ prior handoff: `InviteCustomerInput`.)
 `GET /admin/customers` (or `/admin/users`) returns the enriched rows, the five
 write endpoints above are deployed, and the DTOs are published. Admin then bumps
 the contract pin and removes the local view-models in `src/lib/contracts/types.ts`.
-
-<!-- ci: re-trigger checks -->
