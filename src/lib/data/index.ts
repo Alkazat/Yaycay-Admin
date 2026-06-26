@@ -16,7 +16,10 @@ import type {
   UpdateAffiliateInput,
   InviteCustomerInput,
   CreateProductRequest,
+  CreateTripInput,
   CustomerSummary,
+  AdminUserRow,
+  UpdateCustomerEmailInput,
   ModelRoute,
   ProductSummary,
   Prompt,
@@ -230,7 +233,7 @@ export async function retryJob(id: string): Promise<AiJob | null> {
 }
 
 export async function listTrips(): Promise<AdminTripSummary[]> {
-  if (!isAdminDataLive()) return stubs.stubTrips;
+  if (!isAdminDataLive()) return devStore.getTrips();
   return safe(
     'listTrips',
     async () =>
@@ -258,13 +261,15 @@ export async function searchTrips(
 ): Promise<Page<AdminTripSummary>> {
   if (!isAdminDataLive()) {
     const q = (opts.query ?? '').toLowerCase().trim();
-    const items = stubs.stubTrips.filter(
-      (t) =>
-        !q ||
-        t.destination.toLowerCase().includes(q) ||
-        t.ownerEmail.toLowerCase().includes(q) ||
-        t.id.toLowerCase().includes(q),
-    );
+    const items = devStore
+      .getTrips()
+      .filter(
+        (t) =>
+          !q ||
+          t.destination.toLowerCase().includes(q) ||
+          t.ownerEmail.toLowerCase().includes(q) ||
+          t.id.toLowerCase().includes(q),
+      );
     return { items, nextCursor: null };
   }
   return safe(
@@ -403,6 +408,137 @@ export async function inviteCustomer(
   }
   return liveWrite('inviteCustomer', () =>
     adminApi.post<CustomerSummary>('/admin/customers/invite', input),
+  );
+}
+
+/**
+ * Rich user rows for the Users table (GET /admin/users). The contract's
+ * CustomerSummary is thin, so live we read the existing /admin/customers list
+ * and map each into an AdminUserRow with the operational columns blank
+ * (status derived from deletionRequested; createdAt/lastLoginAt null; counts 0)
+ * until BE enriches the payload. Dev mode serves fully-populated rows so the
+ * table and the whole workflow are testable now. See the handoff doc.
+ */
+export async function searchUsers(
+  opts: SearchOpts = {},
+): Promise<Page<AdminUserRow>> {
+  if (!isAdminDataLive()) {
+    const q = (opts.query ?? '').toLowerCase().trim();
+    const items = devStore
+      .getUsers()
+      .filter((u) => !q || u.email.toLowerCase().includes(q));
+    return { items, nextCursor: null };
+  }
+  return safe(
+    'searchUsers',
+    async () => {
+      const page = await adminApi.get<Page<CustomerSummary>>(
+        `/admin/customers${buildQuery(opts)}`,
+      );
+      return { items: page.items.map(toUserRow), nextCursor: page.nextCursor };
+    },
+    { items: [], nextCursor: null },
+  );
+}
+
+/** Map a thin CustomerSummary into a table row (live, pre-enrichment). */
+function toUserRow(c: CustomerSummary): AdminUserRow {
+  return {
+    ...c,
+    status: c.deletionRequested ? 'deletion-requested' : 'active',
+    createdAt: null,
+    lastLoginAt: null,
+    explorerCount: 0,
+    grownupCount: 0,
+    tripCount: 0,
+  };
+}
+
+/** Change a user's email (PATCH /admin/customers/{id}/email). Fail-soft. */
+export async function updateCustomerEmail(
+  userId: string,
+  input: UpdateCustomerEmailInput,
+): Promise<WriteOutcome<CustomerSummary>> {
+  if (!isAdminDataLive()) {
+    const updated = devStore.updateUserEmail(userId, input.email);
+    return updated
+      ? { ok: true, value: updated }
+      : { ok: false, status: 404, detail: 'user not found (stub)' };
+  }
+  return liveWrite('updateCustomerEmail', () =>
+    adminApi.patch<CustomerSummary>(
+      `/admin/customers/${encodeURIComponent(userId)}/email`,
+      input,
+    ),
+  );
+}
+
+/**
+ * Execute a pending GDPR deletion - irreversible purge of the user + their data
+ * (POST /admin/customers/{id}/deletion-execute). Fail-soft.
+ */
+export async function executeCustomerDeletion(
+  userId: string,
+): Promise<WriteOutcome<{ deleted: true }>> {
+  if (!isAdminDataLive()) {
+    return devStore.executeDeletion(userId)
+      ? { ok: true, value: { deleted: true } }
+      : { ok: false, status: 404, detail: 'user not found (stub)' };
+  }
+  return liveWrite('executeCustomerDeletion', () =>
+    adminApi.post<{ deleted: true }>(
+      `/admin/customers/${encodeURIComponent(userId)}/deletion-execute`,
+    ),
+  );
+}
+
+/**
+ * Hard-remove a user (DELETE /admin/customers/{id}) - intended for
+ * never-activated invites. Fail-soft.
+ */
+export async function removeCustomer(
+  userId: string,
+): Promise<WriteOutcome<{ removed: true }>> {
+  if (!isAdminDataLive()) {
+    return devStore.removeUser(userId)
+      ? { ok: true, value: { removed: true } }
+      : { ok: false, status: 404, detail: 'user not found (stub)' };
+  }
+  return liveWrite('removeCustomer', () =>
+    adminApi.del<{ removed: true }>(
+      `/admin/customers/${encodeURIComponent(userId)}`,
+    ),
+  );
+}
+
+/**
+ * Admin-create a trip for a user with no paywall (POST /admin/trips). BE assigns
+ * the trip + tier entitlement directly, skipping the Stripe purchase. Fail-soft.
+ */
+export async function createTrip(
+  input: CreateTripInput,
+): Promise<WriteOutcome<AdminTripSummary>> {
+  if (!isAdminDataLive()) {
+    return { ok: true, value: devStore.addTrip(input) };
+  }
+  return liveWrite('createTrip', () =>
+    adminApi.post<AdminTripSummary>('/admin/trips', input),
+  );
+}
+
+/** Delete a trip (DELETE /admin/trips/{id}). Fail-soft. */
+export async function deleteTrip(
+  tripId: string,
+): Promise<WriteOutcome<{ deleted: true }>> {
+  if (!isAdminDataLive()) {
+    return devStore.removeTrip(tripId)
+      ? { ok: true, value: { deleted: true } }
+      : { ok: false, status: 404, detail: 'trip not found (stub)' };
+  }
+  return liveWrite('deleteTrip', () =>
+    adminApi.del<{ deleted: true }>(
+      `/admin/trips/${encodeURIComponent(tripId)}`,
+    ),
   );
 }
 
