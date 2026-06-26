@@ -144,9 +144,10 @@ export default async function AffiliateReportPage({
 
       <Card title="Edit affiliate">
         <p style={{ marginTop: 0, color: 'var(--muted)' }}>
-          Changing the discount or code recreates the Stripe coupon on the
-          backend (coupons are immutable). Commission and contact details edit
-          freely.
+          Name, email, handle, commission and the landing slug edit freely. The
+          discount and code back a Stripe coupon, which Stripe makes
+          permanent - to change either, archive this affiliate and create a new
+          one (existing customers keep what they had).
         </p>
         <form
           action={updateAffiliateAction}
@@ -194,26 +195,11 @@ export default async function AffiliateReportPage({
           </label>
           <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-              Code (recreates coupon)
+              Landing slug (yaycay.ai/go/...)
             </span>
             <input
-              name="code"
-              required
-              defaultValue={affiliate.code}
-              style={fieldStyle}
-            />
-          </label>
-          <label style={{ display: 'grid', gap: 'var(--space-1)' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-              Discount % (recreates coupon)
-            </span>
-            <input
-              name="discountPercent"
-              type="number"
-              min="0"
-              max="100"
-              required
-              defaultValue={affiliate.discountPercent}
+              name="landingSlug"
+              defaultValue={affiliate.landingSlug}
               style={fieldStyle}
             />
           </label>
@@ -238,6 +224,46 @@ export default async function AffiliateReportPage({
             Save changes
           </SubmitButton>
         </form>
+
+        <div
+          style={{
+            marginTop: 'var(--space-4)',
+            paddingTop: 'var(--space-3)',
+            borderTop: '1px solid var(--border)',
+            display: 'flex',
+            gap: 'var(--space-4)',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Code (Stripe-locked)
+            </span>
+            <code style={{ fontSize: '1rem' }}>{affiliate.code}</code>
+          </div>
+          <div style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              Discount (Stripe-locked)
+            </span>
+            <code style={{ fontSize: '1rem' }}>
+              {affiliate.discountPercent}%
+            </code>
+          </div>
+          <p
+            style={{
+              margin: 0,
+              flex: 1,
+              minWidth: 200,
+              fontSize: '0.8rem',
+              color: 'var(--muted)',
+            }}
+          >
+            To change the code or discount, use{' '}
+            <strong>Archive</strong> above, then create a fresh affiliate - the
+            coupon is minted new.
+          </p>
+        </div>
       </Card>
 
       <Card title="Monthly report">

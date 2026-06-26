@@ -65,20 +65,19 @@ export async function updateAffiliateAction(formData: FormData): Promise<void> {
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const handle = String(formData.get('handle') ?? '').trim();
-  const code = String(formData.get('code') ?? '')
-    .trim()
-    .toUpperCase();
-  const discountPercent = Number(formData.get('discountPercent') ?? 0);
+  const landingSlug = String(formData.get('landingSlug') ?? '').trim();
   const commissionPercent = Number(formData.get('commissionPercent') ?? 0);
-  if (!currentCode || !name || !email || !handle || !code) return;
+  if (!currentCode || !name || !email || !handle) return;
 
+  // discountPercent/code are Stripe-immutable and not in the contract: changing
+  // them is archive + recreate, never an edit. Only the free-text/commission
+  // fields are sent here.
   const result = await updateAffiliate(currentCode, {
     name,
     email,
     handle,
-    code,
-    discountPercent,
     commissionPercent,
+    ...(landingSlug ? { landingSlug } : {}),
   });
   if (!result.ok) {
     redirect(
@@ -89,7 +88,7 @@ export async function updateAffiliateAction(formData: FormData): Promise<void> {
     actor: session.email,
     action: 'affiliate.update',
     target: currentCode,
-    details: `-> ${result.value.code} (${result.value.discountPercent}% / ${result.value.commissionPercent}%)`,
+    details: `${result.value.name} (${result.value.commissionPercent}% commission, /go/${result.value.landingSlug})`,
   });
   revalidatePath('/affiliates');
   revalidatePath(`/affiliates/${result.value.code}`);

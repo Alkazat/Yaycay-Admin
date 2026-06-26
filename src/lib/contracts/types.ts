@@ -58,6 +58,7 @@ export type {
   AffiliateStatus,
   Affiliate,
   CreateAffiliateInput,
+  UpdateAffiliateInput,
   AffiliateRedemption,
   AffiliateReportRequest,
   AffiliatePage,
@@ -81,22 +82,6 @@ export interface AdminProgress {
   profileId: string | null;
   activeMode: string | null;
   doneItems: string[];
-}
-
-/**
- * Pending contract: edit an existing affiliate. The full set of editable
- * fields; changing `discountPercent`/`code` requires BE to recreate the Stripe
- * coupon (coupons are immutable). Local stand-in until BE publishes an update
- * DTO + endpoint - see docs/HANDOFF-affiliate-edit-archive-BE.md. (Archive is a
- * DELETE, no body.)
- */
-export interface UpdateAffiliateInput {
-  name: string;
-  email: string;
-  handle: string;
-  discountPercent: number;
-  commissionPercent: number;
-  code: string;
 }
 
 /**
