@@ -120,6 +120,26 @@ export interface AdminUserRow extends CustomerSummary {
   tripCount: number;
 }
 
+/**
+ * One row of the data-deletion queue (GET /admin/deletion-requests): the BE
+ * computes the footprint + grace eligibility. Local until the contract package
+ * publishes a DeletionRequest DTO.
+ */
+export interface DeletionRequestItem {
+  userId: string;
+  email: string;
+  requestedAt: string;
+  /** Whole days since the request was raised. */
+  ageDays: number;
+  /** When the 30-day grace elapses and a non-forced execute is allowed. */
+  eligibleAt: string;
+  eligible: boolean;
+  tier: string | null;
+  trips: number;
+  media: number;
+  purchases: number;
+}
+
 /** Pending contract: change a user's email (PATCH /admin/customers/{id}/email). */
 export interface UpdateCustomerEmailInput {
   email: string;

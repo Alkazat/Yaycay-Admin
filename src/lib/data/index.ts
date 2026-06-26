@@ -20,6 +20,7 @@ import type {
   CustomerSummary,
   AdminUserRow,
   AdminUserStatus,
+  DeletionRequestItem,
   UpdateCustomerEmailInput,
   ModelRoute,
   ProductSummary,
@@ -522,6 +523,64 @@ export async function executeCustomerDeletion(
   return liveWrite('executeCustomerDeletion', () =>
     adminApi.post<{ deleted: true }>(
       `/admin/customers/${encodeURIComponent(userId)}/deletion-execute`,
+    ),
+  );
+}
+
+/** The data-deletion queue with footprint + grace (GET /admin/deletion-requests). */
+export async function listDeletionRequests(): Promise<DeletionRequestItem[]> {
+  if (!isAdminDataLive()) return devStore.getDeletionRequests();
+  return safe(
+    'listDeletionRequests',
+    async () =>
+      (
+        await adminApi.get<Page<DeletionRequestItem>>(
+          '/admin/deletion-requests',
+        )
+      ).items,
+    [],
+  );
+}
+
+/** Cancel a pending deletion request (POST /admin/deletion-requests/{id}/cancel). */
+export async function cancelDeletionRequest(userId: string): Promise<boolean> {
+  if (!isAdminDataLive())
+    return devStore.setDeletionRequested(userId, false) != null;
+  await adminApi.post(
+    `/admin/deletion-requests/${encodeURIComponent(userId)}/cancel`,
+  );
+  return true;
+}
+
+/**
+ * Execute a pending deletion from the console
+ * (POST /admin/deletion-requests/{id}/execute). Sends the typed-email
+ * confirmation + optional grace override; the BE enforces both. Fail-soft.
+ */
+export async function executeDeletionRequest(
+  userId: string,
+  email: string,
+  force: boolean,
+): Promise<WriteOutcome<{ deleted: true }>> {
+  if (!isAdminDataLive()) {
+    // Mirror the BE's typed-email guard before the dev purge.
+    const u = devStore.getUsers().find((x) => x.userId === userId);
+    if (!u) return { ok: false, status: 404, detail: 'user not found (stub)' };
+    if (email.trim().toLowerCase() !== u.email.toLowerCase()) {
+      return {
+        ok: false,
+        status: 422,
+        detail: 'Confirmation email does not match.',
+      };
+    }
+    return devStore.executeDeletion(userId)
+      ? { ok: true, value: { deleted: true } }
+      : { ok: false, status: 404, detail: 'user not found (stub)' };
+  }
+  return liveWrite('executeDeletionRequest', () =>
+    adminApi.post<{ deleted: true }>(
+      `/admin/deletion-requests/${encodeURIComponent(userId)}/execute`,
+      { email, force },
     ),
   );
 }
