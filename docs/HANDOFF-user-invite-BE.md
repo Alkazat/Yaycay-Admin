@@ -1,9 +1,11 @@
 # Handoff to Yaycay-BE: invite / onboard a customer from Admin
 
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
-**Status:** Admin "Invite a user" UI is live on the Users screen; it needs the
-endpoint below. Until it ships, the button fails soft and shows the HTTP status
-("HTTP 404 - endpoint not deployed").
+
+> **STATUS (2026-06-26): RESOLVED & CLOSED.** `POST /admin/customers/invite` is
+> live and `@alkazat/contracts@0.33.0` now exports `InviteCustomerInput`. Admin
+> has adopted 0.33.0 and dropped its local stand-in. Nothing outstanding. The
+> rest of this doc is the original spec, kept for history.
 
 ## Why an invite (not a create-with-password)
 

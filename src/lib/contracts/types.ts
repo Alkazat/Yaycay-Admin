@@ -20,6 +20,7 @@ import type {
   CustomerSummary,
   Hotel,
   ProductSummary,
+  TripTier,
   Variants,
   Weather,
 } from '@alkazat/contracts';
@@ -67,6 +68,8 @@ export type {
   ConnectorScope,
   AdminConnector,
   AdminConnectorPage,
+  // Manual customer invite (contract v0.33).
+  InviteCustomerInput,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -85,16 +88,54 @@ export interface AdminProgress {
 }
 
 /**
- * Pending contract: invite a customer (manual onboarding from Admin). BE
- * provisions a pending account in the isolated identity store and emails a
- * magic-link invite; no password is set here (auth is always magic-link + 2FA).
- * Local stand-in until BE publishes the DTO + endpoint - see
- * docs/HANDOFF-user-invite-BE.md.
+ * Account lifecycle as Admin sees it. `invited` = magic-link sent, not yet
+ * signed in; `active` = has signed in; `deletion-requested` = a GDPR deletion
+ * is pending execution.
  */
-export interface InviteCustomerInput {
+export type AdminUserStatus = 'active' | 'invited' | 'deletion-requested';
+
+/**
+ * Admin VIEW-MODEL for the live Users table: the thin contract `CustomerSummary`
+ * enriched with the operational columns an administrator needs at a glance.
+ *
+ * Local on purpose: the published `CustomerSummary` is `{ userId, email, tier,
+ * retentionExpiresAt, deletionRequested }` only. The extra fields below
+ * (status, createdAt, lastLoginAt, explorerCount, grownupCount, tripCount) are
+ * NOT in the contract yet - BE needs to add them (or a richer `GET /admin/users`)
+ * before they populate live; until then live rows show them as null/0 and the
+ * dev store fills them so the workflow is testable. See
+ * docs/HANDOFF-admin-user-management-BE.md.
+ */
+export interface AdminUserRow extends CustomerSummary {
+  status: AdminUserStatus;
+  /** Account creation - "user since". */
+  createdAt: string | null;
+  /** Last successful sign-in. */
+  lastLoginAt: string | null;
+  /** Child profiles on the account ("explorers"). */
+  explorerCount: number;
+  /** Adult travellers on the account ("grownups"). */
+  grownupCount: number;
+  /** Trips owned by the user (derived from the trips list). */
+  tripCount: number;
+}
+
+/** Pending contract: change a user's email (PATCH /admin/customers/{id}/email). */
+export interface UpdateCustomerEmailInput {
   email: string;
-  /** Optional display name to greet them in the invite email. */
-  name?: string;
+}
+
+/**
+ * Pending contract: admin-create a trip for a user with no paywall
+ * (POST /admin/trips). BE assigns the trip + tier entitlement directly, skipping
+ * the Stripe purchase path. Local stand-in - see the handoff doc.
+ */
+export interface CreateTripInput {
+  ownerEmail: string;
+  destination: string;
+  tier: TripTier;
+  startDate: string;
+  endDate: string;
 }
 
 /**
