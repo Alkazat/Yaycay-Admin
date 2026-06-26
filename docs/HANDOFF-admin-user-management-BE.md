@@ -87,3 +87,5 @@ prior handoff: `InviteCustomerInput`.)
 `GET /admin/customers` (or `/admin/users`) returns the enriched rows, the five
 write endpoints above are deployed, and the DTOs are published. Admin then bumps
 the contract pin and removes the local view-models in `src/lib/contracts/types.ts`.
+
+<!-- ci: re-trigger checks -->
