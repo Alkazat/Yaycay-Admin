@@ -3,10 +3,13 @@ import { randomUUID } from 'node:crypto';
 import type {
   AdminAccount,
   AdminConnector,
+  AdminTripSummary,
+  AdminUserRow,
   Affiliate,
   AffiliateStatus,
   AiJob,
   AuditEntry,
+  CreateTripInput,
   CustomerSummary,
   ModelRoute,
   Prompt,
@@ -17,6 +20,7 @@ import type {
   SupportSessionSnapshot,
 } from '@/lib/contracts/types';
 import * as stubs from '@/lib/data/stubs';
+import type { StubUser } from '@/lib/data/stubs';
 
 /*
  * Mutable in-memory store for dev / stub mode ONLY.
@@ -30,7 +34,8 @@ import * as stubs from '@/lib/data/stubs';
 const prompts: Prompt[] = stubs.stubPrompts.map((p) => ({ ...p }));
 const modelRoutes: ModelRoute[] = stubs.stubModelRoutes.map((r) => ({ ...r }));
 const jobs: AiJob[] = stubs.stubJobs.map((j) => ({ ...j }));
-const customers: CustomerSummary[] = stubs.stubCustomers.map((c) => ({ ...c }));
+const users: StubUser[] = stubs.stubUsers.map((c) => ({ ...c }));
+const trips: AdminTripSummary[] = stubs.stubTrips.map((t) => ({ ...t }));
 const reviewItems: ReviewItem[] = stubs.stubReviewItems.map((r) => ({ ...r }));
 const affiliates: Affiliate[] = stubs.stubAffiliates.map((a) => ({ ...a }));
 const connectors: AdminConnector[] = stubs.stubConnectors.map((c) => ({
@@ -46,6 +51,25 @@ const admins: AdminAccount[] = [
     createdAt: '2026-06-13T00:00:00Z',
   },
 ];
+
+/** Project a stored rich user down to the thin contract CustomerSummary. */
+function toThin(u: StubUser): CustomerSummary {
+  return {
+    userId: u.userId,
+    email: u.email,
+    tier: u.tier,
+    retentionExpiresAt: u.retentionExpiresAt,
+    deletionRequested: u.deletionRequested,
+  };
+}
+
+/** Enrich a stored user into a table row, deriving tripCount from trips. */
+function toRow(u: StubUser): AdminUserRow {
+  return {
+    ...u,
+    tripCount: trips.filter((t) => t.ownerEmail === u.email).length,
+  };
+}
 
 function withActive(s: SupportSession): SupportSession {
   return {
@@ -88,22 +112,87 @@ export const devStore = {
     jobs.unshift({ ...job });
   },
   getCustomers(): CustomerSummary[] {
-    return customers.map((c) => ({ ...c }));
+    return users.map(toThin);
+  },
+  getUsers(): AdminUserRow[] {
+    return users.map(toRow);
   },
   addCustomer(customer: CustomerSummary): CustomerSummary {
-    const existing = customers.find((c) => c.email === customer.email);
-    if (existing) return { ...existing };
-    customers.unshift({ ...customer });
-    return { ...customer };
+    const existing = users.find((c) => c.email === customer.email);
+    if (existing) return toThin(existing);
+    // A manual invite: pending account, no login yet, no profiles.
+    const seed: StubUser = {
+      ...customer,
+      status: 'invited',
+      createdAt: new Date().toISOString(),
+      lastLoginAt: null,
+      explorerCount: 0,
+      grownupCount: 0,
+    };
+    users.unshift(seed);
+    return toThin(seed);
+  },
+  updateUserEmail(userId: string, email: string): AdminUserRow | undefined {
+    const found = users.find((c) => c.userId === userId);
+    if (!found) return undefined;
+    // Cascade to owned trips so trip ownership and #trips stay correct.
+    for (const t of trips) if (t.ownerEmail === found.email) t.ownerEmail = email;
+    found.email = email;
+    return toRow(found);
   },
   setDeletionRequested(
     userId: string,
     value: boolean,
   ): CustomerSummary | undefined {
-    const found = customers.find((c) => c.userId === userId);
+    const found = users.find((c) => c.userId === userId);
     if (!found) return undefined;
     found.deletionRequested = value;
-    return { ...found };
+    found.status = value
+      ? 'deletion-requested'
+      : found.lastLoginAt
+        ? 'active'
+        : 'invited';
+    return toThin(found);
+  },
+  /** Execute a pending deletion: purge the user and their trips. */
+  executeDeletion(userId: string): boolean {
+    const i = users.findIndex((c) => c.userId === userId);
+    if (i === -1) return false;
+    const [removed] = users.splice(i, 1);
+    for (let j = trips.length - 1; j >= 0; j--) {
+      if (trips[j].ownerEmail === removed.email) trips.splice(j, 1);
+    }
+    return true;
+  },
+  /** Hard-remove a user (used for never-activated invites). */
+  removeUser(userId: string): boolean {
+    const i = users.findIndex((c) => c.userId === userId);
+    if (i === -1) return false;
+    users.splice(i, 1);
+    return true;
+  },
+  getTrips(): AdminTripSummary[] {
+    return trips.map((t) => ({ ...t }));
+  },
+  addTrip(input: CreateTripInput): AdminTripSummary {
+    const trip: AdminTripSummary = {
+      id: `t_${randomUUID().slice(0, 8)}`,
+      destination: input.destination,
+      ownerEmail: input.ownerEmail,
+      tier: input.tier,
+      status: 'planning',
+      startDate: input.startDate,
+      endDate: input.endDate,
+      retentionExpiresAt: null,
+    };
+    trips.unshift(trip);
+    return { ...trip };
+  },
+  removeTrip(id: string): boolean {
+    const i = trips.findIndex((t) => t.id === id);
+    if (i === -1) return false;
+    trips.splice(i, 1);
+    return true;
   },
   getReviewItems(): ReviewItem[] {
     return reviewItems.map((r) => ({ ...r }));
@@ -192,9 +281,9 @@ export const devStore = {
   startSupportSession(input: StartSupportSessionInput): SupportSession {
     const target =
       (input.targetUserId &&
-        customers.find((c) => c.userId === input.targetUserId)) ||
+        users.find((c) => c.userId === input.targetUserId)) ||
       (input.targetEmail &&
-        customers.find(
+        users.find(
           (c) => c.email.toLowerCase() === input.targetEmail!.toLowerCase(),
         )) ||
       undefined;
@@ -229,13 +318,13 @@ export const devStore = {
   getSupportSnapshot(id: string): SupportSessionSnapshot | undefined {
     const found = supportSessions.find((s) => s.id === id);
     if (!found) return undefined;
-    const customer = customers.find((c) => c.userId === found.targetUserId);
+    const customer = users.find((c) => c.userId === found.targetUserId);
     if (!customer) return undefined;
     return {
       session: withActive(found),
-      customer: { ...customer },
+      customer: toThin(customer),
       profiles: [],
-      trips: stubs.stubTrips.filter((t) => t.ownerEmail === customer.email),
+      trips: trips.filter((t) => t.ownerEmail === customer.email),
     };
   },
 };

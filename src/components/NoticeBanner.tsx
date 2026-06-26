@@ -22,6 +22,19 @@ const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
     tone: 'ok',
     text: 'Invitation sent. The user gets a magic-link email to finish signing up.',
   },
+  emailchanged: { tone: 'ok', text: 'Email address updated.' },
+  requested: {
+    tone: 'ok',
+    text: 'Deletion requested. Review, then Execute to purge the account.',
+  },
+  deleted: { tone: 'ok', text: 'User and their data were permanently deleted.' },
+  removed: { tone: 'ok', text: 'Invite removed.' },
+  confirm: {
+    tone: 'error',
+    text: 'Deletion not executed - type DELETE in the confirm box to proceed.',
+  },
+  tripcreated: { tone: 'ok', text: 'Trip created.' },
+  tripdeleted: { tone: 'ok', text: 'Trip deleted.' },
 };
 
 /** Turn a failing HTTP status into a plain-language cause. */

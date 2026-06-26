@@ -13,7 +13,20 @@ import type {
   ReviewItem,
   TripContent,
   AdminTripSummary,
+  AdminUserStatus,
 } from '@/lib/contracts/types';
+
+/**
+ * Dev-store seed for a user row: everything an AdminUserRow needs EXCEPT
+ * tripCount, which the store derives from the trips list at read time.
+ */
+export interface StubUser extends CustomerSummary {
+  status: AdminUserStatus;
+  createdAt: string | null;
+  lastLoginAt: string | null;
+  explorerCount: number;
+  grownupCount: number;
+}
 
 /*
  * Local fixtures used when Supabase / BE are not configured (dev only).
@@ -250,13 +263,18 @@ export const stubProducts: ProductSummary[] = [
   },
 ];
 
-export const stubCustomers: CustomerSummary[] = [
+export const stubUsers: StubUser[] = [
   {
     userId: 'u_1',
     email: 'family@example.com',
     tier: 'ours',
     retentionExpiresAt: '2027-07-07',
     deletionRequested: false,
+    status: 'active',
+    createdAt: '2026-01-12T09:30:00Z',
+    lastLoginAt: '2026-06-24T18:02:00Z',
+    explorerCount: 2,
+    grownupCount: 2,
   },
   {
     userId: 'u_2',
@@ -264,6 +282,23 @@ export const stubCustomers: CustomerSummary[] = [
     tier: 'byo',
     retentionExpiresAt: null,
     deletionRequested: true,
+    status: 'deletion-requested',
+    createdAt: '2025-11-03T14:10:00Z',
+    lastLoginAt: '2026-05-30T08:45:00Z',
+    explorerCount: 1,
+    grownupCount: 1,
+  },
+  {
+    userId: 'u_3',
+    email: 'pending.invite@example.com',
+    tier: null,
+    retentionExpiresAt: null,
+    deletionRequested: false,
+    status: 'invited',
+    createdAt: '2026-06-20T11:00:00Z',
+    lastLoginAt: null,
+    explorerCount: 0,
+    grownupCount: 0,
   },
 ];
 
