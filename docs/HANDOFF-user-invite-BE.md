@@ -2,14 +2,10 @@
 
 **From:** Yaycay-Admin thread. **For:** Yaycay-BE (contract owner).
 
-> **STATUS (2026-06-26): endpoint LIVE, one DTO still to publish.**
-> `POST /admin/customers/invite` shipped (BE CI green) and Admin's "Invite a
-> user" button works against it. **The only open item:** `@alkazat/contracts`
-> `0.32.0` does NOT export `InviteCustomerInput`, so Admin still carries a local
-> stand-in for that body type. **Ask: publish `InviteCustomerInput` in the next
-> contract bump** (shape below, unchanged) - Admin drops its stand-in the moment
-> it lands. Nothing else is blocking. The rest of this doc is the original spec,
-> kept for reference.
+> **STATUS (2026-06-26): RESOLVED & CLOSED.** `POST /admin/customers/invite` is
+> live and `@alkazat/contracts@0.33.0` now exports `InviteCustomerInput`. Admin
+> has adopted 0.33.0 and dropped its local stand-in. Nothing outstanding. The
+> rest of this doc is the original spec, kept for history.
 
 ## Why an invite (not a create-with-password)
 

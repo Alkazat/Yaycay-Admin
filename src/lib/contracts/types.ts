@@ -68,6 +68,8 @@ export type {
   ConnectorScope,
   AdminConnector,
   AdminConnectorPage,
+  // Manual customer invite (contract v0.33).
+  InviteCustomerInput,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -83,19 +85,6 @@ export interface AdminProgress {
   profileId: string | null;
   activeMode: string | null;
   doneItems: string[];
-}
-
-/**
- * Pending contract: invite a customer (manual onboarding from Admin). BE
- * provisions a pending account in the isolated identity store and emails a
- * magic-link invite; no password is set here (auth is always magic-link + 2FA).
- * Local stand-in until BE publishes the DTO + endpoint - see
- * docs/HANDOFF-user-invite-BE.md.
- */
-export interface InviteCustomerInput {
-  email: string;
-  /** Optional display name to greet them in the invite email. */
-  name?: string;
 }
 
 /**
