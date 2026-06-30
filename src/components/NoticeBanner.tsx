@@ -27,7 +27,11 @@ const MESSAGES: Record<string, { tone: 'ok' | 'error'; text: string }> = {
     tone: 'ok',
     text: 'Deletion requested. Review, then Execute to purge the account.',
   },
-  deleted: { tone: 'ok', text: 'User and their data were permanently deleted.' },
+  deleted: {
+    tone: 'ok',
+    text: 'User and their data were permanently deleted.',
+  },
+  cancelled: { tone: 'ok', text: 'Deletion request cancelled.' },
   removed: { tone: 'ok', text: 'Invite removed.' },
   confirm: {
     tone: 'error',

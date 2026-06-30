@@ -7,8 +7,6 @@ import { searchUsers } from '@/lib/data';
 import type { AdminUserRow } from '@/lib/contracts/types';
 import {
   changeEmailAction,
-  deletionRequestAction,
-  executeDeletionAction,
   inviteUserAction,
   removeUserAction,
 } from './actions';
@@ -315,7 +313,10 @@ export default async function UsersPage({
               </SubmitButton>
             </form>
 
-            {/* Deletion lifecycle. */}
+            {/* Deletion is managed in the dedicated console; the Users row
+                links across (carrying the account so the console can request,
+                or show cancel/execute for a pending one). Remove-invite stays
+                here - it's never-activated cleanup, not the GDPR queue. */}
             {u.status === 'invited' ? (
               <form action={removeUserAction}>
                 <input type="hidden" name="userId" value={u.userId} />
@@ -323,63 +324,23 @@ export default async function UsersPage({
                   Remove invite
                 </SubmitButton>
               </form>
-            ) : u.status === 'deletion-requested' ? (
-              <form
-                action={executeDeletionAction}
-                style={{ display: 'flex', gap: 'var(--space-2)' }}
-              >
-                <input type="hidden" name="userId" value={u.userId} />
-                <input
-                  name="confirm"
-                  placeholder="type DELETE"
-                  required
-                  style={{
-                    minHeight: 'var(--tap-min)',
-                    padding: '0 var(--space-3)',
-                    border: '1px solid var(--alert)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--surface)',
-                    width: 130,
-                  }}
-                />
-                <SubmitButton pendingLabel="Deleting..." style={dangerBtn}>
-                  Execute deletion
-                </SubmitButton>
-              </form>
             ) : (
-              <form action={deletionRequestAction}>
-                <input type="hidden" name="userId" value={u.userId} />
-                <SubmitButton
-                  pendingLabel="Recording..."
-                  style={{
-                    minHeight: 'var(--tap-min)',
-                    padding: '0 var(--space-4)',
-                    border: '1px solid var(--alert)',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--surface)',
-                    color: 'var(--alert)',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+              <Link
+                href={`/deletion-requests?focus=${u.userId}&email=${encodeURIComponent(u.email)}`}
+                title="Open this account in the deletion console"
+                style={{ textDecoration: 'none' }}
+              >
+                <Badge
+                  tone={u.status === 'deletion-requested' ? 'alert' : 'default'}
                 >
-                  Request deletion
-                </SubmitButton>
-              </form>
+                  {u.status === 'deletion-requested'
+                    ? 'deletion requested'
+                    : 'manage deletion'}{' '}
+                  &rarr;
+                </Badge>
+              </Link>
             )}
           </div>
-          {u.status === 'deletion-requested' ? (
-            <p
-              style={{
-                margin: 'var(--space-2) 0 0',
-                fontSize: '0.8rem',
-                color: 'var(--alert)',
-              }}
-            >
-              Deletion is pending. Executing permanently purges this user and
-              their {u.tripCount} trip{u.tripCount === 1 ? '' : 's'} - there is
-              no undo.
-            </p>
-          ) : null}
         </Card>
       ))}
 

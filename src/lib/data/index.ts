@@ -19,7 +19,7 @@ import type {
   CreateTripInput,
   CustomerSummary,
   AdminUserRow,
-  AdminUserStatus,
+  DeletionRequestItem,
   UpdateCustomerEmailInput,
   ModelRoute,
   ProductSummary,
@@ -413,27 +413,9 @@ export async function inviteCustomer(
 }
 
 /**
- * The enriched user payload BE now serves (see HANDOFF-admin-user-management-BE).
- * The published `CustomerSummary` is still thin, so we read the extra columns
- * "ahead of contract": this local type adds them as OPTIONAL, every field is
- * `??`-defaulted, and the read degrades cleanly if any are absent. When BE
- * publishes the DTOs we swap this for the typed `AdminUserRow` and drop it.
- */
-type EnrichedUser = CustomerSummary &
-  Partial<{
-    status: AdminUserStatus;
-    createdAt: string | null;
-    lastLoginAt: string | null;
-    explorerCount: number;
-    grownupCount: number;
-    tripCount: number;
-  }>;
-
-/**
- * Rich user rows for the Users table. Live, we prefer `GET /admin/users` and
- * fall back to `GET /admin/customers` (BE may have enriched the latter in place);
- * either way the enriched columns are read defensively. Dev mode serves
- * fully-populated rows so the table and the whole workflow are testable.
+ * Rich user rows for the Users table (contract v0.35.0: GET /admin/customers
+ * now returns AdminUserRow directly). Dev mode serves fully-populated rows so
+ * the table and the whole workflow are testable.
  */
 export async function searchUsers(
   opts: SearchOpts = {},
@@ -447,45 +429,11 @@ export async function searchUsers(
   }
   return safe(
     'searchUsers',
-    async () => {
-      const page = await fetchUserPage(opts);
-      return { items: page.items.map(toUserRow), nextCursor: page.nextCursor };
-    },
+    async () => adminApi.get<Page<AdminUserRow>>(
+      `/admin/customers${buildQuery(opts)}`,
+    ),
     { items: [], nextCursor: null },
   );
-}
-
-/** Prefer the dedicated users endpoint; fall back to the customers list. */
-async function fetchUserPage(opts: SearchOpts): Promise<Page<EnrichedUser>> {
-  try {
-    return await adminApi.get<Page<EnrichedUser>>(
-      `/admin/users${buildQuery(opts)}`,
-    );
-  } catch (e) {
-    if (e instanceof AdminApiError && e.status === 404) {
-      return adminApi.get<Page<EnrichedUser>>(
-        `/admin/customers${buildQuery(opts)}`,
-      );
-    }
-    throw e;
-  }
-}
-
-/** Map the (possibly enriched) live payload into a table row, defaulting gaps. */
-function toUserRow(c: EnrichedUser): AdminUserRow {
-  return {
-    userId: c.userId,
-    email: c.email,
-    tier: c.tier,
-    retentionExpiresAt: c.retentionExpiresAt,
-    deletionRequested: c.deletionRequested,
-    status: c.status ?? (c.deletionRequested ? 'deletion-requested' : 'active'),
-    createdAt: c.createdAt ?? null,
-    lastLoginAt: c.lastLoginAt ?? null,
-    explorerCount: c.explorerCount ?? 0,
-    grownupCount: c.grownupCount ?? 0,
-    tripCount: c.tripCount ?? 0,
-  };
 }
 
 /** Change a user's email (PATCH /admin/customers/{id}/email). Fail-soft. */
@@ -522,6 +470,64 @@ export async function executeCustomerDeletion(
   return liveWrite('executeCustomerDeletion', () =>
     adminApi.post<{ deleted: true }>(
       `/admin/customers/${encodeURIComponent(userId)}/deletion-execute`,
+    ),
+  );
+}
+
+/** The data-deletion queue with footprint + grace (GET /admin/deletion-requests). */
+export async function listDeletionRequests(): Promise<DeletionRequestItem[]> {
+  if (!isAdminDataLive()) return devStore.getDeletionRequests();
+  return safe(
+    'listDeletionRequests',
+    async () =>
+      (
+        await adminApi.get<Page<DeletionRequestItem>>(
+          '/admin/deletion-requests',
+        )
+      ).items,
+    [],
+  );
+}
+
+/** Cancel a pending deletion request (POST /admin/deletion-requests/{id}/cancel). */
+export async function cancelDeletionRequest(userId: string): Promise<boolean> {
+  if (!isAdminDataLive())
+    return devStore.setDeletionRequested(userId, false) != null;
+  await adminApi.post(
+    `/admin/deletion-requests/${encodeURIComponent(userId)}/cancel`,
+  );
+  return true;
+}
+
+/**
+ * Execute a pending deletion from the console
+ * (POST /admin/deletion-requests/{id}/execute). Sends the typed-email
+ * confirmation + optional grace override; the BE enforces both. Fail-soft.
+ */
+export async function executeDeletionRequest(
+  userId: string,
+  email: string,
+  force: boolean,
+): Promise<WriteOutcome<{ deleted: true }>> {
+  if (!isAdminDataLive()) {
+    // Mirror the BE's typed-email guard before the dev purge.
+    const u = devStore.getUsers().find((x) => x.userId === userId);
+    if (!u) return { ok: false, status: 404, detail: 'user not found (stub)' };
+    if (email.trim().toLowerCase() !== u.email.toLowerCase()) {
+      return {
+        ok: false,
+        status: 422,
+        detail: 'Confirmation email does not match.',
+      };
+    }
+    return devStore.executeDeletion(userId)
+      ? { ok: true, value: { deleted: true } }
+      : { ok: false, status: 404, detail: 'user not found (stub)' };
+  }
+  return liveWrite('executeDeletionRequest', () =>
+    adminApi.post<{ deleted: true }>(
+      `/admin/deletion-requests/${encodeURIComponent(userId)}/execute`,
+      { email, force },
     ),
   );
 }

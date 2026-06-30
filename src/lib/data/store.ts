@@ -11,6 +11,7 @@ import type {
   AuditEntry,
   CreateTripInput,
   CustomerSummary,
+  DeletionRequestItem,
   ModelRoute,
   Prompt,
   ReviewItem,
@@ -136,7 +137,8 @@ export const devStore = {
     const found = users.find((c) => c.userId === userId);
     if (!found) return undefined;
     // Cascade to owned trips so trip ownership and #trips stay correct.
-    for (const t of trips) if (t.ownerEmail === found.email) t.ownerEmail = email;
+    for (const t of trips)
+      if (t.ownerEmail === found.email) t.ownerEmail = email;
     found.email = email;
     return toRow(found);
   },
@@ -193,6 +195,29 @@ export const devStore = {
     if (i === -1) return false;
     trips.splice(i, 1);
     return true;
+  },
+  // The deletion queue, derived from the requested users. Stubs are dated 40
+  // days ago so they read as past-grace (eligible) and exercise execute.
+  getDeletionRequests(): DeletionRequestItem[] {
+    const DAY_MS = 86_400_000;
+    const requestedAt = new Date(Date.now() - 40 * DAY_MS).toISOString();
+    const eligibleAt = new Date(
+      new Date(requestedAt).getTime() + 30 * DAY_MS,
+    ).toISOString();
+    return users
+      .filter((u) => u.deletionRequested)
+      .map((u) => ({
+        userId: u.userId,
+        email: u.email,
+        requestedAt,
+        ageDays: 40,
+        eligibleAt,
+        eligible: true,
+        tier: u.tier,
+        trips: trips.filter((t) => t.ownerEmail === u.email).length,
+        media: 0,
+        purchases: 0,
+      }));
   },
   getReviewItems(): ReviewItem[] {
     return reviewItems.map((r) => ({ ...r }));

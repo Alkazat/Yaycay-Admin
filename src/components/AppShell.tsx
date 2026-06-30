@@ -6,6 +6,7 @@ import type { AdminSession } from '@/lib/contracts/types';
 const NAV = [
   { href: '/', label: 'Dashboard' },
   { href: '/customers', label: 'Users' },
+  { href: '/deletion-requests', label: 'Deletion requests' },
   { href: '/prompts', label: 'Prompts' },
   { href: '/models', label: 'Models' },
   { href: '/trips', label: 'Trips' },
