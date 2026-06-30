@@ -15,6 +15,8 @@
 import type {
   ActivityKind,
   AdminTripSummary,
+  AdminUserRow,
+  AdminUserStatus,
   Challenge,
   ChildProfile,
   CustomerSummary,
@@ -70,6 +72,9 @@ export type {
   AdminConnectorPage,
   // Manual customer invite (contract v0.33).
   InviteCustomerInput,
+  // Users table row + lifecycle status (contract v0.35).
+  AdminUserRow,
+  AdminUserStatus,
   // Names the Admin app uses that the contract publishes under a different name.
   ContentReviewItem as ReviewItem,
   ContentReviewStatus as ReviewStatus,
@@ -87,38 +92,8 @@ export interface AdminProgress {
   doneItems: string[];
 }
 
-/**
- * Account lifecycle as Admin sees it. `invited` = magic-link sent, not yet
- * signed in; `active` = has signed in; `deletion-requested` = a GDPR deletion
- * is pending execution.
- */
-export type AdminUserStatus = 'active' | 'invited' | 'deletion-requested';
-
-/**
- * Admin VIEW-MODEL for the live Users table: the thin contract `CustomerSummary`
- * enriched with the operational columns an administrator needs at a glance.
- *
- * Local on purpose: the published `CustomerSummary` is `{ userId, email, tier,
- * retentionExpiresAt, deletionRequested }` only. The extra fields below
- * (status, createdAt, lastLoginAt, explorerCount, grownupCount, tripCount) are
- * NOT in the contract yet - BE needs to add them (or a richer `GET /admin/users`)
- * before they populate live; until then live rows show them as null/0 and the
- * dev store fills them so the workflow is testable. See
- * docs/HANDOFF-admin-user-management-BE.md.
- */
-export interface AdminUserRow extends CustomerSummary {
-  status: AdminUserStatus;
-  /** Account creation - "user since". */
-  createdAt: string | null;
-  /** Last successful sign-in. */
-  lastLoginAt: string | null;
-  /** Child profiles on the account ("explorers"). */
-  explorerCount: number;
-  /** Adult travellers on the account ("grownups"). */
-  grownupCount: number;
-  /** Trips owned by the user (derived from the trips list). */
-  tripCount: number;
-}
+// AdminUserStatus and AdminUserRow are now published in @alkazat/contracts v0.35.0
+// and re-exported in the contract block above.
 
 /**
  * One row of the data-deletion queue (GET /admin/deletion-requests): the BE
