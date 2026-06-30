@@ -19,7 +19,6 @@ import type {
   CreateTripInput,
   CustomerSummary,
   AdminUserRow,
-  AdminUserStatus,
   DeletionRequestItem,
   UpdateCustomerEmailInput,
   ModelRoute,
@@ -414,27 +413,9 @@ export async function inviteCustomer(
 }
 
 /**
- * The enriched user payload BE now serves (see HANDOFF-admin-user-management-BE).
- * The published `CustomerSummary` is still thin, so we read the extra columns
- * "ahead of contract": this local type adds them as OPTIONAL, every field is
- * `??`-defaulted, and the read degrades cleanly if any are absent. When BE
- * publishes the DTOs we swap this for the typed `AdminUserRow` and drop it.
- */
-type EnrichedUser = CustomerSummary &
-  Partial<{
-    status: AdminUserStatus;
-    createdAt: string | null;
-    lastLoginAt: string | null;
-    explorerCount: number;
-    grownupCount: number;
-    tripCount: number;
-  }>;
-
-/**
- * Rich user rows for the Users table. Live, we prefer `GET /admin/users` and
- * fall back to `GET /admin/customers` (BE may have enriched the latter in place);
- * either way the enriched columns are read defensively. Dev mode serves
- * fully-populated rows so the table and the whole workflow are testable.
+ * Rich user rows for the Users table (contract v0.35.0: GET /admin/customers
+ * now returns AdminUserRow directly). Dev mode serves fully-populated rows so
+ * the table and the whole workflow are testable.
  */
 export async function searchUsers(
   opts: SearchOpts = {},
@@ -448,45 +429,11 @@ export async function searchUsers(
   }
   return safe(
     'searchUsers',
-    async () => {
-      const page = await fetchUserPage(opts);
-      return { items: page.items.map(toUserRow), nextCursor: page.nextCursor };
-    },
+    async () => adminApi.get<Page<AdminUserRow>>(
+      `/admin/customers${buildQuery(opts)}`,
+    ),
     { items: [], nextCursor: null },
   );
-}
-
-/** Prefer the dedicated users endpoint; fall back to the customers list. */
-async function fetchUserPage(opts: SearchOpts): Promise<Page<EnrichedUser>> {
-  try {
-    return await adminApi.get<Page<EnrichedUser>>(
-      `/admin/users${buildQuery(opts)}`,
-    );
-  } catch (e) {
-    if (e instanceof AdminApiError && e.status === 404) {
-      return adminApi.get<Page<EnrichedUser>>(
-        `/admin/customers${buildQuery(opts)}`,
-      );
-    }
-    throw e;
-  }
-}
-
-/** Map the (possibly enriched) live payload into a table row, defaulting gaps. */
-function toUserRow(c: EnrichedUser): AdminUserRow {
-  return {
-    userId: c.userId,
-    email: c.email,
-    tier: c.tier,
-    retentionExpiresAt: c.retentionExpiresAt,
-    deletionRequested: c.deletionRequested,
-    status: c.status ?? (c.deletionRequested ? 'deletion-requested' : 'active'),
-    createdAt: c.createdAt ?? null,
-    lastLoginAt: c.lastLoginAt ?? null,
-    explorerCount: c.explorerCount ?? 0,
-    grownupCount: c.grownupCount ?? 0,
-    tripCount: c.tripCount ?? 0,
-  };
 }
 
 /** Change a user's email (PATCH /admin/customers/{id}/email). Fail-soft. */
